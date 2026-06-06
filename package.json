@@ -1,0 +1,75 @@
+{
+  "name": "screen-annotator",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Electron 桌面全屏批注工具，包含悬浮工具栏、OCR、快捷键、自启动与安装器支持。",
+  "author": "SOLO AI Assistant",
+  "type": "module",
+  "main": "dist-electron/electron/main.cjs",
+  "scripts": {
+    "dev": "concurrently -k \"vite\" \"npm run build:electron && wait-on tcp:5173 && electron .\"",
+    "build": "tsc && vite build && npm run build:electron",
+    "build:electron": "tsc electron/main.ts --outDir dist-electron --module commonjs --skipLibCheck && powershell -NoProfile -Command \"if (Test-Path 'dist-electron/electron/main.cjs') { Remove-Item 'dist-electron/electron/main.cjs' -Force }; if (Test-Path 'dist-electron/electron/main.js') { Rename-Item -Path 'dist-electron/electron/main.js' -NewName 'main.cjs' -Force }; Set-Content -Path 'dist-electron/package.json' -Value '{\\\"type\\\":\\\"commonjs\\\"}' -Encoding Ascii\"",
+    "pack": "npm run build && electron-builder --dir",
+    "dist:win": "npm run build && electron-builder --win nsis --config.directories.output=release-dist",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "test": "vitest run",
+    "preview": "vite preview"
+  },
+  "build": {
+    "appId": "com.commenttools.annotator",
+    "productName": "CommentTools",
+    "directories": {
+      "output": "release"
+    },
+    "icon": "assets/icons/brush-app-icon.png",
+    "files": [
+      "assets/icons/**",
+      "dist/**",
+      "dist-electron/**",
+      "package.json"
+    ],
+    "win": {
+      "icon": "assets/icons/brush-app-icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "assets/icons/brush-app-icon.ico",
+      "uninstallerIcon": "assets/icons/brush-app-icon.ico",
+      "createDesktopShortcut": true,
+      "shortcutName": "CommentTools"
+    }
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.15",
+    "@types/react-dom": "^18.2.7",
+    "@typescript-eslint/eslint-plugin": "^8.60.1",
+    "@typescript-eslint/parser": "^8.60.1",
+    "@vitejs/plugin-react": "^4.0.3",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.1",
+    "typescript": "^5.0.2",
+    "vite": "^4.4.5",
+    "vitest": "^2.1.8",
+    "wait-on": "^7.2.0"
+  }
+}
