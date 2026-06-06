@@ -199,57 +199,6 @@ CommentTools/
 |-- vite.config.ts            # Vite 配置
 ```
 
-## GitHub 需要上传什么
-
-建议上传这些文件和目录：
-
-- `electron/`
-- `src/`
-- `assets/`
-- `TestFile/`
-- `ProjectBasics/`
-- `Logs/`
-- `docs/`
-- `package.json`
-- `package-lock.json`
-- `tsconfig.json`
-- `tsconfig.node.json`
-- `vite.config.ts`
-- `.eslintrc.cjs`
-- `.eslintignore`
-- `README.md`
-
-### 不建议上传
-
-以下内容通常不应提交到 GitHub：
-
-- `node_modules/`
-- `dist/`
-- `dist-electron/`
-- `release/`
-- `release-dist/`
-- `release-quit-icon/`
-
-如果你后续准备公开仓库，建议再补一个 `.gitignore`，至少包含：
-
-```gitignore
-node_modules/
-dist/
-dist-electron/
-release/
-release-dist/
-release-quit-icon/
-```
-
-## GitHub 发布建议
-
-如果你要把这个项目传到 GitHub，推荐顺序：
-
-1. 先清理本地构建产物
-2. 确认 `README.md`、`package.json`、`package-lock.json` 已更新
-3. 提交源代码、测试、文档和图标资源
-4. 将安装包作为 GitHub Release 附件上传，而不是直接提交到源码仓库
-
 ## 故障排查
 
 ### 1. 安装版启动时报主进程错误
