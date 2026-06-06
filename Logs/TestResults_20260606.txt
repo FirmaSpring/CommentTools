@@ -1,0 +1,378 @@
+[Date]: 2026-06-06 00:56:00
+[Type]: Update
+[Component]: Automated Validation
+[Changes]:
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+- 执行 `npm run dev` 并等待启动输出
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 当前 OCR 与设置窗口修复未引入新的类型或 lint 问题。
+- 开发态 Electron 仍会输出 CSP 警告，但这属于未打包开发模式的已知提醒，不是本轮功能回归。
+[Impact Analysis]:
+- 单测覆盖画布对象栈、文字分组、OCR 文本归一化、工具栏模型和窗口配置。
+- 构建产物已成功生成，说明前端与主进程入口都能正常编译。
+- 开发态可正常启动，说明本轮修复没有破坏 Electron 启动链路。
+[Performance Metrics]:
+- npm test: 10 passed / 47 passed / Duration 1.23s
+- npm run lint: passed
+- npm run build: passed / Vite build 595ms
+- npm run dev: Vite ready in 190ms, Electron renderer connected, only CSP development warning observed
+
+[Date]: 2026-06-06 01:29:00
+[Type]: Update
+[Component]: Safety And Runtime Validation
+[Changes]:
+- 执行 `npm test -- TestFile/unit/toolbar-style.test.ts TestFile/unit/emergency-shortcuts.test.ts TestFile/unit/ocr-queue.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+- 复查 `npm run dev` 与 `npx electron .` 启动日志
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 当前代码修复已通过完整构建，但开发态启动结果会受到旧 Vite 进程占用 5173 端口影响。
+- 二次直接启动 Electron 时出现的缓存占用报错与并发运行实例有关，不能误判为本轮代码逻辑错误。
+[Impact Analysis]:
+- 紧急快捷键、设置窗背景与 OCR 队列三类修复均已具备回归测试覆盖。
+- 主进程入口仍保持 `dist-electron/main.cjs`，构建产物路径未被本轮修复破坏。
+[Performance Metrics]:
+- focused tests: 3 files passed, 5 tests passed, Duration 0.63s
+- npm test: 13 files passed, 52 tests passed, Duration 0.98s
+- npm run lint: passed
+- npm run build: passed / Vite build 519ms
+
+[Date]: 2026-06-06 01:54:00
+[Type]: Update
+[Component]: Assist Mode And OCR Validation
+[Changes]:
+- 执行 `npm test -- TestFile/unit/shape-recognition.test.ts TestFile/unit/ocr-engine.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+[Variables Added]:
+- None
+[Functions Added]:
+- getOcrAttemptProfiles()
+[Lessons Learned]:
+- 实际手绘方框需要容忍边缘抖动和角点偏移，单纯依赖唯一坐标会把方框误判成椭圆。
+- OCR 参数切换对识别结果有直接影响，单行和单块分段模式应作为默认重试组合。
+[Impact Analysis]:
+- 辅助模式对圆和方块的识别更接近真实书写输入。
+- OCR 识别稳定性提升且未引入新的构建警告。
+[Performance Metrics]:
+- focused tests: 2 files passed, 12 tests passed, Duration 0.64s
+- npm test: 13 files passed, 55 tests passed, Duration 0.96s
+- npm run lint: passed
+- npm run build: passed / Vite build 525ms
+
+[Date]: 2026-06-06 08:12:00
+[Type]: Update
+[Component]: OCR Preprocess Validation
+[Changes]:
+- 执行 `npm test -- TestFile/unit/ocr-preprocess.test.ts TestFile/unit/ocr-engine.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+[Variables Added]:
+- None
+[Functions Added]:
+- createBinaryMask(pixels)
+- applyOcrPreprocess(pixels, width, height)
+[Lessons Learned]:
+- 黑白二值化和轻量膨胀能在不引入复杂依赖的前提下，显著增强 OCR 输入质量。
+- 预处理逻辑做成纯函数后，能直接用单测锁住核心图像增强行为。
+[Impact Analysis]:
+- OCR 识别链路从“原始离屏抗锯齿图”升级为“增强后的黑白加粗图”。
+- 相关增强未破坏既有窗口、辅助模式和 OCR 队列能力。
+[Performance Metrics]:
+- focused tests: 2 files passed, 5 tests passed, Duration 0.61s
+- npm test: 14 files passed, 57 tests passed, Duration 0.95s
+- npm run lint: passed
+- npm run build: passed / Vite build 515ms
+
+[Date]: 2026-06-06 10:07:00
+[Type]: Update
+[Component]: OCR Timeout And Recognition Bar Validation
+[Changes]:
+- 执行 `npm test -- TestFile/unit/ocr-engine.test.ts TestFile/unit/recognition-bar-model.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+[Variables Added]:
+- OCR_TIMEOUT_MS
+[Functions Added]:
+- getOcrTimeoutMs()
+- withOcrTimeout(task, timeoutMs)
+- getRecognitionBarBounds(viewport)
+- getRecognitionBarTheme()
+[Lessons Learned]:
+- OCR worker 只要出现长时间无响应，前端就必须先通过超时机制恢复到可交互状态。
+- 识别框的防越界布局更适合通过纯函数建模，再由组件注入样式。
+[Impact Analysis]:
+- OCR 识别失败时不会再长期卡在加载态。
+- 识别框视觉和边界行为已固定，后续调样式时更不容易回归。
+[Performance Metrics]:
+- focused tests: 2 files passed, 7 tests passed, Duration 0.61s
+- npm test: 15 files passed, 61 tests passed, Duration 0.98s
+- npm run lint: passed
+- npm run build: passed / Vite build 521ms
+
+[Date]: 2026-06-06 10:11:00
+[Type]: Update
+[Component]: Toolbar Hover And Fullscreen OCR Validation
+[Changes]:
+- 执行 `npm test -- TestFile/unit/toolbar-hit-test.test.ts TestFile/unit/text-recognition.test.ts TestFile/unit/canvas-objects.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+[Variables Added]:
+- None
+[Functions Added]:
+- getToolbarHoverCursor(isOverInteractiveArea)
+- buildPendingRecognitionDrafts(strokes, ignoredTargetGroups)
+- getRecognizedTextTargetGroups(state)
+[Lessons Learned]:
+- 统一光标策略和禁用 SVG 指针事件可以显著缓解工具栏按钮 hover 时的鼠标样式抖动。
+- 全屏 OCR 如果只扫描“未解决的手写组”，就能同时兼顾识别覆盖范围和避免重复识别规范字体。
+[Impact Analysis]:
+- 工具栏 hover 体验更稳定。
+- OCR 能按顺序处理当前屏幕上的多组手写内容，并跳过已完成替换的文本。
+[Performance Metrics]:
+- focused tests: 3 files passed, 18 tests passed, Duration 0.65s
+- npm test: 15 files passed, 64 tests passed, Duration 1.02s
+- npm run lint: passed
+- npm run build: passed / Vite build 578ms
+
+[Date]: 2026-06-06 10:21:00
+[Type]: Update
+[Component]: Chinese OCR And Hover Stability Validation
+[Changes]:
+- 执行 `npm test -- TestFile/unit/toolbar-hit-test.test.ts TestFile/unit/ocr-engine.test.ts TestFile/unit/ocr-preprocess.test.ts TestFile/unit/text-recognition.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+[Variables Added]:
+- keepWindowInteractive
+[Functions Added]:
+- getInkColumnSegments(mask, width, height)
+- createProcessedRecognitionCanvas(strokes, bounds)
+- getRecognitionStrokeImageDataUrls(strokes, bounds)
+[Lessons Learned]:
+- 中文短词 OCR 不能只靠整块识别，先做中文优先参数再按列切分字符片段更稳。
+- 紧凑窗口如果继续频繁切换鼠标穿透，按钮边缘仍会出现 cursor 抽搐，直接锁定交互窗口更可靠。
+[Impact Analysis]:
+- 连笔短词识别结果更偏向中文文本，不再容易被整块误判成英文字母。
+- OCR 识别框不再展示误导性的“几笔”数量。
+- 工具栏按钮 hover 时的鼠标样式更稳定。
+[Performance Metrics]:
+- focused tests: 4 files passed, 22 tests passed, Duration 0.67s
+- npm test: 15 files passed, 67 tests passed, Duration 0.97s
+- npm run lint: passed
+- npm run build: passed / Vite build 534ms
+
+[Date]: 2026-06-06 11:06:52
+[Type]: Feature
+[Component]: Settings / Shortcuts / Packaging
+[Changes]:
+- 执行 `npm test -- TestFile/unit/toolbar-model.test.ts TestFile/unit/toolbar-settings.test.ts TestFile/unit/app-settings.test.ts TestFile/unit/auto-launch.test.ts TestFile/unit/package-config.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+- 执行 `npm run dist:win`
+- 补安装依赖 `electron-builder` 与 `tesseract.js`
+[Variables Added]:
+- DEFAULT_SHORTCUT_SETTINGS
+- DEFAULT_APP_SETTINGS
+- RUN_REGISTRY_PATH
+- AUTO_LAUNCH_VALUE_NAME
+- appSettings
+- registeredUserShortcuts
+- openPanel
+- shortcutDrafts
+- settingsError
+[Functions Added]:
+- normalizeShortcutInput(value)
+- validateShortcutSettings(shortcuts)
+- mergeAppSettings(settings)
+- getShortcutEntries(shortcuts)
+- getAutoLaunchCommandValue(executablePath)
+- getEnableAutoLaunchArgs(executablePath)
+- getDisableAutoLaunchArgs()
+- syncShortcutSettings(shortcuts)
+- syncLaunchOnStartup(enabled)
+- registerUserShortcuts()
+- handleShortcutAction(action)
+[Lessons Learned]:
+- 打包链路会暴露遗漏在 `package.json` 之外的真实运行依赖，OCR 使用的 `tesseract.js` 必须显式声明后才能稳定构建安装器。
+- `tsc` 生成主进程输出路径发生变化后，必须同步修正 Electron 入口和 builder 配置，否则 NSIS 打包阶段会找不到入口文件。
+[Impact Analysis]:
+- 工具栏现已具备系统设置入口，用户可直接配置快捷键和开机自启动。
+- 主进程现在会统一接管快捷键注册、自启动写注册表和设置持久化，减少渲染层分叉逻辑。
+- 已生成可安装的 Windows 安装器，且 NSIS 支持用户自选安装路径。
+[Performance Metrics]:
+- focused tests: 5 files passed, 24 tests passed, Duration 0.73s
+- npm test: 17 files passed, 78 tests passed, Duration 1.19s
+- npm run lint: passed
+- npm run build: passed / Vite build 690ms
+- npm run dist:win: passed / installer generated at `release/CommentTools-Setup-0.0.0.exe`
+
+[Date]: 2026-06-06 11:18:00
+[Type]: Feature
+[Component]: System Settings Quit Button And Brush Icon
+[Changes]:
+- 新增 `TestFile/unit/system-settings-panel.test.tsx`，锁住系统设置面板中的 `退出程序` 按钮文案
+- 更新 `TestFile/unit/emergency-shortcuts.test.ts`，锁住主进程存在 `app:quit` IPC 处理
+- 更新 `TestFile/unit/package-config.test.ts`，锁住应用图标、Windows 图标和 NSIS 安装器图标路径配置
+- 在 `SystemSettingsPanel.tsx` 中加入 `退出程序` 按钮，并在 `ToolbarApp.tsx` 中接入 `app:quit` IPC 发送
+- 在 `electron/main.ts` 中加入 `ipcMain.on('app:quit', () => app.quit())`
+- 生成 `assets/icons/brush-app-icon.svg`、`assets/icons/brush-app-icon.png`、`assets/icons/brush-app-icon.ico`
+- 将画笔图标接入 `package.json` 打包配置和开发态 BrowserWindow 图标
+[Variables Added]:
+- APP_ICON_RELATIVE_PATH
+- SHORTCUT_FIELDS
+[Functions Added]:
+- getAppIconPath()
+- handleQuitApp()
+[Lessons Learned]:
+- Windows 打包目录如果残留被系统或外部预览占用的 `app.asar`，会导致默认输出目录构建失败，但不代表代码或图标配置本身有问题。
+- 统一使用一套 SVG/PNG/ICO 画笔资源，可以同时满足开发态窗口图标和 NSIS 安装器图标需求。
+[Impact Analysis]:
+- 用户现在可以在系统设置面板里直接完整退出程序。
+- 应用窗口、打包产物和安装器视觉已从默认 Electron 图标切换为自定义画笔图标。
+- 默认 `release/` 目录中的旧产物仍保留；本轮新安装器成功生成于 `release-quit-icon/`。
+[Performance Metrics]:
+- focused tests: 3 files passed, 6 tests passed, Duration 0.80s
+- npm test: 18 files passed, 81 tests passed, Duration 1.29s
+- npm run lint: passed
+- npm run build: passed / Vite build 721ms
+- npx electron-builder --win nsis --config.directories.output=release-quit-icon: passed
+
+[Date]: 2026-06-06 12:05:00
+[Type]: Fix
+[Component]: Packaging And Full Verification
+[Changes]:
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+- 执行 `npm run dist:win`
+- 更新 `TestFile/unit/package-config.test.ts`，锁住 `dist:win` 输出目录和 `package.json` 基础元数据
+- 在 `package.json` 中补充 `description`、`author`，并将 `dist:win` 输出目录切换为 `release-dist`
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 默认 `electron-builder` 输出目录如果残留被占用文件，最稳妥的修复方式是切换到新的固定输出目录，而不是继续依赖已污染目录反复重试。
+- `description` 和 `author` 虽然不影响开发态运行，但会在安装器构建阶段持续产生噪音，值得顺手补齐。
+[Impact Analysis]:
+- 当前默认 `npm run dist:win` 已恢复可用，不再被旧 `release/win-unpacked` 锁文件阻塞。
+- 本轮系统级检查未发现新的测试、lint、类型或构建错误。
+[Performance Metrics]:
+- npm test: 18 files passed, 82 tests passed, Duration 1.26s
+- npm run lint: passed
+- npm run build: passed / Vite build 596ms
+- npm run dist:win: passed / installer generated at `release-dist/CommentTools-Setup-0.0.0.exe`
+
+[Date]: 2026-06-06 13:09:00
+[Type]: Fix
+[Component]: Packaged Main Process CommonJS Boundary
+[Changes]:
+- 更新 `TestFile/unit/package-config.test.ts`，锁住 `build:electron` 必须为 `dist-electron/` 生成局部 `package.json`
+- 更新 `package.json` 的 `build:electron` 脚本，在编译结束后写入 `dist-electron/package.json`
+- 执行 `npm run build:electron` 并确认产物 `dist-electron/package.json` 内容为 `{\"type\":\"commonjs\"}`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+- 执行 `npm run dist:win`
+- 直接启动 `release-dist/win-unpacked/CommentTools.exe` 做安装前等价启动验证
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 主进程入口即使是 `.cjs`，只要其依赖的 `.js` 文件仍落在根 `type: module` 作用域里，安装版依旧会在运行时触发 `ERR_REQUIRE_ESM`。
+- 给 `dist-electron/` 建立独立 `package.json` 边界，是修复 Electron 主进程 CommonJS/ESM 混用问题的最低风险方案。
+[Impact Analysis]:
+- 安装版主进程现在会把 `dist-electron/src/electron/*.js` 统一按 CommonJS 解释，不再因 `appSettings.js` 被误判为 ESM 而崩溃。
+- 新安装包与 `win-unpacked` 产物都已通过启动级验证。
+[Performance Metrics]:
+- focused tests: 1 file passed, 4 tests passed, Duration 0.60s
+- npm run build:electron: passed
+- npm test: 18 files passed, 82 tests passed, Duration 1.17s
+- npm run lint: passed
+- npm run build: passed / Vite build 529ms
+- npm run dist:win: passed / installer generated at `release-dist/CommentTools-Setup-0.0.0.exe`
+- release-dist/win-unpacked/CommentTools.exe: started successfully and remained running after 5s
+
+[Date]: 2026-06-06 13:17:00
+[Type]: Fix
+[Component]: Packaged JSON Encoding And Renderer Entrypoints
+[Changes]:
+- 更新 `TestFile/unit/package-config.test.ts`，锁住 `build:electron` 使用无 BOM 的 `-Encoding Ascii`
+- 新增 `TestFile/unit/renderer-paths.test.ts`，锁住开发态走 Vite URL、安装态走本地 `dist` HTML 文件
+- 更新 `package.json` 的 `build:electron` 脚本，将 `dist-electron/package.json` 写法从 `-Encoding UTF8` 改为 `-Encoding Ascii`
+- 新增 `src/electron/rendererPaths.ts`，统一封装开发态与安装态的渲染入口解析
+- 更新 `electron/main.ts`，让 `canvas`、`toolbar`、`settings` 三个窗口在安装态使用 `loadFile(...)`
+- 执行 `npm run build:electron` 并验证 `dist-electron/package.json` 字节头为 `7B 22 74`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+- 执行 `npm run dist:win`
+- 直接启动 `release-dist/win-unpacked/CommentTools.exe` 做安装前等价启动验证
+[Variables Added]:
+- None
+[Functions Added]:
+- getRendererTarget(appPath, view, devServerUrl)
+- getDevServerUrl()
+- loadRenderer(window, view)
+[Lessons Learned]:
+- Windows PowerShell 5 的 `Set-Content -Encoding UTF8` 会给 JSON 写 BOM，安装版在某些读取路径下会直接把 BOM 视为非法 JSON 开头。
+- 安装版启动成功不能只验证主进程不崩，还必须验证渲染层没有继续依赖开发态 `localhost`。
+[Impact Analysis]:
+- 安装版不会再因为 `dist-electron/package.json` BOM 触发 JSON 解析错误。
+- 安装版现在会从打包后的本地 HTML 启动界面，不再尝试连接 `http://localhost:5173`。
+- 新安装包已同时收口主进程与渲染入口两类启动问题。
+[Performance Metrics]:
+- focused tests: 2 files passed, 6 tests passed
+- npm run build:electron: passed
+- dist-electron/package.json bytes: `7B 22 74`
+- npm test: 19 files passed, 84 tests passed, Duration 1.31s
+- npm run lint: passed
+- npm run build: passed / Vite build 532ms
+- npm run dist:win: passed / installer generated at `release-dist/CommentTools-Setup-0.0.0.exe`
+- release-dist/win-unpacked/CommentTools.exe: started successfully and remained running after 5s without localhost errors
+
+[Date]: 2026-06-06 13:24:00
+[Type]: Fix
+[Component]: Toolbar And Settings Window Bounds
+[Changes]:
+- 更新 `TestFile/unit/window-config.test.ts`，锁住更高的工具栏窗口和更贴近工具栏的设置窗口位置
+- 更新 `TestFile/unit/toolbar-style.test.ts`，锁住独立设置窗口壳层右侧仅保留 2px 视觉间距
+- 更新 `src/electron/windowConfig.ts`，将工具栏窗口高度从 `452` 提升到 `500`，并把设置窗口与工具栏的外部窗口间距收口为 `0`
+- 更新 `src/toolbar/Toolbar.css`，将 `.settings-window-shell` 的 padding 调整为 `8px 2px 8px 8px`，并把 `.toolbar-shell` 改为 `overflow: visible`
+- 执行 `npm test -- TestFile/unit/window-config.test.ts TestFile/unit/toolbar-style.test.ts`
+- 执行 `npm test`
+- 执行 `npm run lint`
+- 执行 `npm run build`
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 工具栏窗口尺寸必须随按钮数量同步扩容，否则独立窗口模式下会直接裁切顶部和底部按钮。
+- 独立设置面板的“贴边感”不仅取决于窗口坐标，还取决于窗口壳层自身的内边距。
+[Impact Analysis]:
+- 当前工具栏上下按钮可完整显示，不再被窗口高度裁掉。
+- 独立设置面板视觉上已与工具栏保持约 2px 间距，更符合“贴着工具栏”的交互预期。
+[Performance Metrics]:
+- focused tests: 2 files passed, 7 tests passed, Duration 0.67s
+- npm test: 19 files passed, 85 tests passed, Duration 1.20s
+- npm run lint: passed
+- npm run build: passed / Vite build 535ms

@@ -1,0 +1,28 @@
+[Date]: 2026-06-05 21:39:30
+[Type]: Update
+[Component]: ToolbarApp / SubmenuPanel / Toolbar.css
+[Changes]:
+- 将 `toolbarSettings` 接入 `ToolbarApp`，新增 `rgbColor` 与 `assistMode` 状态，并补齐 `text` 工具按钮逻辑
+- 将 `SubmenuPanel` 改为按设置分区渲染，支持 RGB 取色板、辅助模式开关、橡皮 `清除所有`
+- 重做工具栏样式为简洁平面风，滑块切换为内嵌壳层样式
+- 收口 `electron/main.ts` 与 `CanvasApp.tsx` 的消息类型，兼容 `assistMode` 与 `text`
+[Variables Added]:
+- rgbColor
+- assistMode
+- RGB_CHANNELS
+[Functions Added]:
+- hexToRgbColor
+- rgbColorToHex
+- syncColorState
+- handleRgbChange
+- handleAssistModeChange
+[Lessons Learned]:
+- 颜色相关状态需要围绕单一转换源收口，否则预设色、RGB 输入和实际发出的颜色值容易漂移
+- 先由 `toolbarSettings` 提供分区，再让 UI 组件消费，可显著减少条件分支与回归面
+[Impact Analysis]:
+- Task 3 所需的工具栏交互已经具备，后续可继续在 Canvas 侧实现识别与辅助逻辑
+- 样式层从拟玻璃过渡到平面风后，命中区与层级边界更清晰
+[Performance Metrics]:
+- 聚焦测试：3 个文件 15 个测试全部通过
+- 构建：`npm run build` 通过
+- 运行态：现有 `npm run dev` 保持运行，HMR 已吸收本次改动

@@ -1,0 +1,23 @@
+[Date]: 2026-06-06 12:05:00
+[Type]: Fix
+[Component]: package.json / Packaging
+[Changes]:
+- 修复默认 `npm run dist:win` 容易被旧 `release/win-unpacked` 目录锁文件阻塞的问题
+- 将安装器输出目录切换为 `release-dist`
+- 补充 `package.json` 的 `description` 与 `author`
+- 新增测试覆盖打包输出目录和基础元数据要求
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 发布链路问题不一定来自代码逻辑，也可能来自上一次构建残留文件的目录占用。
+- 对脚本行为加单测可以避免后续把输出目录或必要元数据再改丢。
+[Impact Analysis]:
+- 默认安装器命令恢复稳定可用。
+- 构建日志更干净，误报更少。
+[Performance Metrics]:
+- npm test: 18 files passed, 82 tests passed
+- npm run lint: passed
+- npm run build: passed
+- npm run dist:win: passed

@@ -1,0 +1,31 @@
+[Date]: 2026-06-06 01:28:00
+[Type]: Fix
+[Component]: electron/main.ts, src/toolbar/Toolbar.css, src/toolbar/ToolbarApp.tsx, src/canvas/ocrEngine.ts, src/canvas/ocrQueue.ts, src/canvas/CanvasApp.tsx
+[Changes]:
+- 将主题变量作用域扩展到 `.settings-window-shell`，修复独立设置窗口背景变量丢失后面板看起来透明的问题。
+- 主进程新增 `EMERGENCY_SHORTCUTS` 与 `forceSafeMouseMode()`，支持 `Escape` 和 `Ctrl+Shift+X` 紧急解除全屏绘图拦截。
+- 工具栏与设置窗口新增 `reset-toolbar-ui-state` 响应，主进程触发紧急回退时可同步清掉高亮工具和二级设置面板。
+- 新增 `ocrQueue.ts`，将 OCR 改为单活动任务 + 单最新待处理任务，避免连续手写时 OCR 任务无限堆积。
+- 在切换工具、保留手写、清空画布和组件卸载时调用 `resetOcrWorker()`，释放后台 OCR worker。
+[Variables Added]:
+- EMERGENCY_SHORTCUTS
+- ocrQueueRef
+[Functions Added]:
+- forceSafeMouseMode()
+- resetOcrProcessing()
+- resetOcrWorker()
+- createOcrQueueState()
+- enqueueLatestOcrJob(state, job)
+- finishActiveOcrJob(state)
+[Lessons Learned]:
+- Electron 主进程在 `type: module` 项目里要谨慎拆分 CommonJS 辅助模块，否则容易引入主入口路径或模块制式问题。
+- 只“忽略旧 OCR 结果”并不足以解决卡顿，必须限制后台任务数量并在退出场景主动释放 worker。
+- 全屏透明拦截窗口必须始终提供键盘级紧急兜底，不能只依赖悬浮工具栏切换回来。
+[Impact Analysis]:
+- 设置窗口主题显示更稳定，不再因变量作用域丢失而出现透明错觉。
+- 绘图模式的失控风险大幅下降，用户可直接通过快捷键恢复鼠标透传。
+- OCR 模式在高频书写和反复重试场景下更稳定，CPU 与内存峰值风险降低。
+[Performance Metrics]:
+- npm test: 13 files passed, 52 tests passed, 约 0.98s
+- npm run lint: passed
+- npm run build: passed，Vite build 约 0.52s

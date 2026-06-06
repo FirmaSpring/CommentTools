@@ -1,0 +1,82 @@
+[2026-06-05 20:16:00] 新建 Electron 桌面批注项目，当前已完成透明画布窗口、右侧黑球入口、垂直工具栏、侧滑二级设置面板、基础 IPC 通信、画笔/橡皮/撤回/清屏/拖尾纯逻辑与单元测试。
+[2026-06-05 20:16:00] 当前技术结构为双窗口模式：Toolbar Window 承载交互，Canvas Window 承载绘制；通过 IPC 同步 tool-changed、setting-changed、canvas-command。
+[2026-06-05 20:16:00] 下阶段优先项：真实 Electron 运行验证、多显示器支持、鼠标样式自定义、轨迹视觉进一步高级化、打包与发布。
+[2026-06-05 20:50:00] 已按最新反馈将工具栏继续横向收窄，主工具栏宽度调整为 48，工具栏窗口宽度调整为 296，并保持紧贴屏幕右边缘。
+[2026-06-05 20:50:00] 已去掉工具栏和设置面板的半透明玻璃视觉，改为稳定的深色实底样式，避免透明背景引发观感和运行问题。
+[2026-06-05 20:50:00] 已定位并修复 Electron 启动 code 1 的根因：package.json 的 main 和 build:electron 脚本指向了错误的 dist-electron/electron/main.cjs 路径，现统一改为 dist-electron/main.cjs。
+[2026-06-05 20:59:00] 已修复工具栏边缘鼠标样式闪烁：工具栏交互区新增小缓冲区和 90ms 离开延时，并缓存上次穿透状态避免重复 IPC 切换。
+[2026-06-05 20:59:00] 已新增深浅色切换按钮，默认深色模式使用左上到右下的 rgb(20, 19, 20) 到黑色渐变；浅色模式同步覆盖黑球、主栏和设置面板。
+[2026-06-05 20:59:00] 已将工具栏略微放大并从屏幕右侧回退 12px，同时把设置面板改为绝对定位侧滑，避免再次点击高亮按钮时主工具栏本体发生位移。
+[2026-06-05 21:30:08] 已按增强计划 Task 1 执行 TDD：先将 `toolbar-model.test.ts` 改为要求 `theme` 后新增 `text` 工具，再运行聚焦测试确认红灯只来自工具模型缺口。
+[2026-06-05 21:30:08] 现状确认：`src/electron/windowConfig.ts` 与 `electron/main.ts` 已提前符合增强版工具栏高度 620 和右侧间距 12 的要求，本次无需再改窗口配置实现。
+[2026-06-05 21:30:08] 已对 `src/toolbar/toolbarModel.ts` 做最小实现，扩展 `ToolbarAction` 及 `TOOLBAR_TOOLS` 以支持 `text`/`字体自识别`，相关聚焦单测已恢复全绿。
+[2026-06-05 21:32:50] 已按增强计划 Task 2 执行 TDD：先新增 `TestFile/unit/toolbar-settings.test.ts`，用红灯锁住 `pen` 的 `rgb/assistMode`、`eraser` 的 `clearAll`、`text` 无设置及 `shouldShowToolSubmenu` 规则。
+[2026-06-05 21:32:50] 已创建纯逻辑模块 `src/toolbar/toolbarSettings.ts`，当前只包含工具到设置分区的映射与子菜单显隐判断，未提前接入 UI。
+[2026-06-05 21:32:50] 聚焦测试 `npm test -- TestFile/unit/toolbar-settings.test.ts` 已恢复全绿，后续 Task 3 可直接复用该模型接入 `ToolbarApp` 与 `SubmenuPanel`。
+[2026-06-05 21:39:30] 已按增强计划 Task 3 执行 TDD：先在 `toolbar-settings.test.ts` 新增 RGB 十六进制与通道值互转测试，并确认因缺少 `hexToRgbColor`/`rgbColorToHex` 而先红。
+[2026-06-05 21:39:30] 已把 `toolbarSettings` 真正接入 `ToolbarApp` 与 `SubmenuPanel`：新增 `text` 工具按钮、RGB 取色板、辅助模式开关、橡皮 `清除所有`，并将 `text` 工具明确排除在旧子面板逻辑之外。
+[2026-06-05 21:39:30] 已重做 `Toolbar.css` 为更简洁的平面风格，滑块改为内嵌壳层；同时收口 `electron/main.ts` 与 `CanvasApp.tsx` 的消息类型，避免 `assistMode` 与 `text` 工具引入运行时类型断裂。
+[2026-06-05 21:42:26] 已按增强计划 Task 4 执行 TDD：先新增 `TestFile/unit/canvas-objects.test.ts`，用统一栈顺序、跨类型撤回和一键清空三个断言锁住对象栈行为，并确认首次红灯来自 `canvasObjects` 模块缺失。
+[2026-06-05 21:42:53] 已新增 `src/canvas/canvasObjects.ts` 纯逻辑模块，提供 `stroke` / `shape` / `text` 三类对象的统一栈追加、撤回和清空能力，当前刻意不提前耦合 `CanvasApp` 集成层。
+[2026-06-05 21:42:53] `npm test -- TestFile/unit/canvas-objects.test.ts` 已恢复全绿，当前 Task 4 的纯逻辑基础已就绪，可供后续 Task 7 接入统一对象化撤回与清除流程。
+[2026-06-05 21:46:43] 已按增强计划 Task 5 执行 TDD：先新增 `TestFile/unit/shape-recognition.test.ts`，用直线、椭圆、矩形、箭头和自由笔迹五组断言锁住 `high/low` 置信度分类边界，并确认首轮红灯来自 `shapeRecognition` 模块缺失。
+[2026-06-05 21:46:43] 已新增 `src/canvas/shapeRecognition.ts` 纯逻辑模块，当前按最小实现顺序识别 `arrow -> rect -> ellipse -> line`，未命中时统一回退为 `freehand` + `low`，避免过早耦合 Canvas 集成层。
+[2026-06-05 21:47:02] 已完成回归验证：`npm test` 全绿，`npm run build` 通过，`GetDiagnostics` 对新建实现与测试文件均无报错；`npm run lint` 仍因环境缺少 `eslint` 可执行依赖而失败，属于现存环境阻塞而非本次改动引入。
+[2026-06-05 21:50:06] 已按增强计划 Task 6 执行 TDD：先新增 `TestFile/unit/text-recognition.test.ts`，用停笔 3 秒触发、连续手写分组、字号估算与最小值钳制锁住纯逻辑边界，并确认首轮红灯来自 `textRecognition` 模块缺失。
+[2026-06-05 21:50:06] 已新增 `src/canvas/textRecognition.ts`，当前只实现 `shouldTriggerTextRecognition`、`groupHandwritingBatch` 与 `estimateTextFontSize` 三个纯逻辑入口，未提前接入 OCR 或 Canvas 集成态。
+[2026-06-05 21:58:30] 已按增强计划 Task 7 执行 TDD：先在 `canvas-state.test.ts` 增加“对象栈变化后收口可见笔迹”的失败测试，并补充 `canvas-objects.test.ts` 中“文本对象也可统一撤回”的断言，确认真实缺口在 Canvas 集成层而非纯逻辑分类器。
+[2026-06-05 21:58:30] `CanvasApp` 现已接入统一对象栈渲染：普通笔迹走 `stroke` 对象，辅助模式高置信度图形走 `shape` 对象，文本工具停笔 3 秒后会追加基础 `text` 对象并展示识别条；撤回和清空统一改为以对象栈为准同步收口已提交笔迹。
+[2026-06-05 21:58:30] 已新增 `syncCommittedStrokesWithObjectIds` 与 `getCanvasObjectStrokeIds` 用于把对象栈和 `canvasState` 真正接通；全量 `npm test`、`npm run build` 通过，`npm run lint` 仍因环境缺少 `eslint` 可执行文件失败，属于现存环境阻塞。
+[2026-06-05 22:05:08] 已完成增强计划 Task 8 收口：补齐 `ProjectBasics/Function.txt` 与 `ProjectBasics/Variable.txt` 中缺失的工具模型、窗口配置和命中判断登记，并将最终验证结果写回日志。
+[2026-06-05 22:05:08] 为降低最终诊断噪音，已修复 `src/toolbar/SubmenuPanel.tsx` 的按钮/输入可访问性错误并为 `src/toolbar/ToolbarApp.tsx` 按钮补 `type="button"`；随后重新执行 `npm test` 与 `npm run build` 均通过。
+[2026-06-05 22:05:08] 当前 `npm run dev` 进程仍在运行，最新输出仅见 `SubmenuPanel.tsx`、`ToolbarApp.tsx` 的 HMR 更新和页面 reload；剩余诊断为 `CanvasApp.tsx` / `ToolbarApp.tsx` / `SubmenuPanel.tsx` 的 inline style 警告，以及 `tsconfig*.json` 缺少 `forceConsistentCasingInFileNames` 的提示。
+[2026-06-05 22:06:18] 已复核 `npm run lint`，当前仍因环境未安装 `eslint` 可执行文件而直接失败；这属于现存工程依赖阻塞，不影响 `npm test`、`npm run build` 与当前 `npm run dev` 持续运行。
+[2026-06-06 00:13:30] 已按约定顺序继续推进并完成三项后续工作：先打通 ESLint 环境，再补辅助模式实时预览，最后补文本识别确认条；当前 `npm run lint`、`npm test`、`npm run build` 全部通过。
+[2026-06-06 00:13:30] 已新增 `.eslintrc.cjs`、`.eslintignore` 并安装 `eslint`、`@typescript-eslint/parser`、`@typescript-eslint/eslint-plugin`，同时补齐 `tsconfig.json` / `tsconfig.node.json` 的 `forceConsistentCasingInFileNames`，工程质量门禁恢复可用。
+[2026-06-06 00:13:30] 辅助模式现支持绘制中实时预览：高置信度直线、矩形、椭圆、箭头会在按住鼠标移动时以规则化预览显示，抬笔后再提交为 shape 对象；对应纯逻辑入口为 `getAssistPreviewShapeType()`。
+[2026-06-06 00:13:30] 文本识别现支持基础确认闭环：停笔 3 秒后出现可编辑的确认条，用户可“确认替换 / 保留手写 / 重新识别”，确认后会通过 `replaceStrokeObjectsWithText()` 用文字对象替换目标笔迹。
+[2026-06-06 00:13:30] 已顺手做一轮代码检查与去重：删除了 `CanvasApp` 中重复的 bounds 合并逻辑，改为复用 `buildRecognitionDraft()`；同时把识别浮层样式迁移到 `src/canvas/Canvas.css`，减少 inline style 警告和重复样式代码。
+[2026-06-06 00:31:24] 已按最新用户反馈把工具栏结构从“单窗口内嵌设置面板”改为“紧凑 toolbarWindow + 独立 settingsWindow”双顶置窗口；设置面板不再受工具栏窗口高度裁切，主进程通过 `toolbar-state-sync` 同步两侧状态。
+[2026-06-06 00:31:24] `windowConfig` 已更新为紧凑工具栏边界：`96x452` 的 toolbarWindow 与位于其左侧的 `280x520` settingsWindow；对应纯函数测试已通过，Electron 主进程已重启使新窗口结构生效。
+[2026-06-06 00:31:24] 已修正画笔光标热点，`getCursorHotspot('pen', 32)` 现在返回笔尖位置 `{ x: 6, y: 24 }`，避免绘制轨迹从笔图标中心发出。
+[2026-06-06 00:31:24] 当前 `npm run dev` 为新重启实例，日志显示 3 个 renderer 与 Vite 正常连接；剩余可见终端信息只有开发期 Electron CSP 警告，没有新的构建或运行态报错。
+[2026-06-06 00:54:30] 已确认设置窗口支持内部滚动：`SubmenuPanel` 新增 `.submenu-panel__content` 滚动容器，独立设置窗口样式恢复 `background: var(--panel-bg)`，用于解决下方选项显示不全和背景丢失。
+[2026-06-06 00:54:30] 已接入真实 OCR：安装 `tesseract.js`，新增 `src/canvas/ocrEngine.ts`，并在 `CanvasApp` 中通过离屏 canvas 导出手写笔迹图片后调用 `recognizeTextFromDataUrl()` 回填识别结果。
+[2026-06-06 00:54:30] 已补回归保障“整组替换”链路：`text-recognition.test.ts` 新增 7 笔短语同组测试，识别确认条现携带完整 `targetIds`，确认替换时统一用一个文字对象替换整组笔画。
+[2026-06-06 00:54:30] 本轮验证结果：`npm test`、`npm run lint`、`npm run build` 全通过；`npm run dev` 启动后 Vite 与 Electron renderer 正常连接，暂未出现新的运行时错误。
+[2026-06-06 01:27:00] 已修复独立设置窗口背景透明根因：主题变量从 `.widget-container` 扩展到 `.settings-window-shell`，确保透明 BrowserWindow 内的设置面板仍能拿到 `--panel-bg`、`--panel-border` 等变量。
+[2026-06-06 01:27:00] 已为全屏绘图模式加入紧急兜底：主进程新增 `EMERGENCY_SHORTCUTS` 与 `forceSafeMouseMode()`，按 `Escape` 或 `Ctrl+Shift+X` 会强制恢复鼠标穿透并关闭设置面板。
+[2026-06-06 01:27:00] OCR 现已改为串行队列：`ocrQueueRef` 只保留一个活动识别和一个最新待处理识别；切换工具、清空或保留手写时会调用 `resetOcrWorker()` 释放后台 OCR 资源。
+[2026-06-06 01:27:00] 本轮全量验证：`npm test` 通过 13 个文件 52 个测试，`npm run lint` 通过，`npm run build` 通过；开发态复查时发现 5173 端口被旧 Vite 占用、二次直启 Electron 出现缓存占用警告，属于现存环境并发问题，不是本轮代码回归。
+[2026-06-06 01:52:00] 已提升辅助模式对手绘圆形和方形的容错：`isRectangle()` 现按边缘贴合率和四角覆盖率识别，不再要求坐标完全重复，因此轻微抖动的圆角方框也能被归类为 `rect`。
+[2026-06-06 01:52:00] 已增强 OCR 参数策略：`getOcrAttemptProfiles()` 先以单行分段模式识别，失败后回退到单块分段模式，并统一设置 `user_defined_dpi=300`，提高中文手写识别稳定性。
+[2026-06-06 01:52:00] 本轮回归新增测试覆盖“手绘方框识别”“手绘圆形识别”和“OCR 多参数重试”，当前 `npm test` 通过 13 个文件 55 个测试，`npm run lint` 与 `npm run build` 继续全绿。
+[2026-06-06 08:11:00] 已新增 `src/canvas/ocrPreprocess.ts`，在 OCR 前对离屏画布执行黑白二值化和 1 像素膨胀加粗，减少浅灰锯齿和细笔画对中文手写识别的干扰。
+[2026-06-06 08:11:00] `CanvasApp` 的 `getRecognitionStrokeImageDataUrl()` 已接入 `applyOcrPreprocess()`，当前 OCR 不再直接吃原始抗锯齿图，而是吃增强后的黑白图。
+[2026-06-06 08:11:00] 本轮新增 `ocr-preprocess.test.ts` 覆盖“二值化保留深色笔画”和“笔画加粗”两类场景；当前 `npm test` 通过 14 个文件 57 个测试，`npm run lint` 与 `npm run build` 继续全绿。
+[2026-06-06 10:06:00] 已为 OCR 增加超时保护：`withOcrTimeout()` 默认 8 秒兜底，worker 卡住时会直接返回空结果并触发界面退出“识别中”状态，不再无限等待。
+[2026-06-06 10:06:00] 已新增 `recognitionBarModel.ts`，统一约束 OCR 识别框尺寸和配色；当前识别框固定为 20,19,20 黑底、白色呼吸边，并按视口宽度自动收窄避免超出屏幕。
+[2026-06-06 10:06:00] 本轮回归新增 `recognition-bar-model.test.ts` 和 OCR 超时用例；当前 `npm test` 通过 15 个文件 61 个测试，`npm run lint` 与 `npm run build` 全绿。
+[2026-06-06 10:10:00] 已稳定工具栏按钮 hover：工具栏整块交互区和按钮统一使用 `pointer` 光标，按钮内 SVG 禁用指针事件，降低原生箭头与手形在图标边缘来回抽搐的问题。
+[2026-06-06 10:10:00] 文本识别调度已改为“全屏未解决手写组扫描”：`buildPendingRecognitionDrafts()` 会从当前画布所有手写元数据中构建待识别草稿，并跳过已被规范字体替换过的目标组。
+[2026-06-06 10:10:00] 本轮回归新增 `getToolbarHoverCursor()`、`buildPendingRecognitionDrafts()` 与 `getRecognizedTextTargetGroups()` 测试覆盖；当前 `npm test` 通过 15 个文件 64 个测试，`npm run lint` 与 `npm run build` 全绿。
+[2026-06-06 10:20:00] 已把工具栏窗口切到“紧凑窗口始终接管鼠标”策略：`shouldIgnoreToolbarMouse()` 新增 `keepWindowInteractive` 分支，Toolbar/Settings 不再在按钮边缘来回切换穿透状态。
+[2026-06-06 10:20:00] OCR 已升级为中文优先 + 列分段识别：`getOcrAttemptProfiles()` 首先使用带英文字母黑名单的中文优先单行配置，`getInkColumnSegments()` 会从预处理后的黑白图里按列切出多个字符片段，连笔短词可逐段识别后再拼接。
+[2026-06-06 10:20:00] 识别框文案已去掉“几笔”展示，避免连笔写成单一 stroke 时误显示“1 画”；当前 `npm test` 通过 15 个文件 67 个测试，`npm run lint` 与 `npm run build` 全绿。
+[2026-06-06 11:06:52] 已补本轮 `settings` 系统设置能力：工具栏新增 `settings` 按钮，独立设置窗口现可在原有笔刷面板与系统设置面板之间切换。
+[2026-06-06 11:06:52] 主进程已接入应用设置持久化、用户快捷键动态注册和 Windows 注册表自启动；快捷键默认值为 `Alt+1/2/3/4/C`，范围限制为 `Alt + 单个字母或数字`。
+[2026-06-06 11:06:52] 已补 `src/electron/appSettings.ts` 与 `src/electron/autoLaunch.ts` 纯逻辑模块，并新增对应单测覆盖默认值、规范化、冲突校验和注册表命令生成。
+[2026-06-06 11:06:52] 打包链路已切到 `electron-builder + NSIS`，当前安装器产物已生成到 `release/CommentTools-Setup-0.0.0.exe`，并支持安装目录自选。
+[2026-06-06 11:18:00] 已在系统设置面板底部加入 `退出程序` 按钮，渲染层通过 `app:quit` IPC 请求主进程执行 `app.quit()`，不再只是关闭单个窗口。
+[2026-06-06 11:18:00] 已生成一套画笔程序图标资源：`assets/icons/brush-app-icon.svg`、`brush-app-icon.png`、`brush-app-icon.ico`，并接入开发态窗口图标和 `electron-builder` / NSIS 打包配置。
+[2026-06-06 11:18:00] 本轮完整验证已通过：`npm test` 18 文件 81 测试全绿，`npm run lint`、`npm run build` 通过；默认 `release/win-unpacked` 因旧 `app.asar` 被外部进程占用而无法覆盖，因此改用 `release-quit-icon/` 目录成功生成新安装器。
+[2026-06-06 12:05:00] 已做一轮系统级 bug 检查：`npm test`、`npm run lint`、`npm run build`、编辑器诊断均为全绿，当前没有发现新的代码级错误或类型问题。
+[2026-06-06 12:05:00] 已修复默认 `npm run dist:win` 的发布链路问题：脚本改为输出到 `release-dist/`，绕开旧 `release/win-unpacked` 的锁文件冲突；同时补上 `package.json` 的 `description` 与 `author`，builder 告警已清除。
+[2026-06-06 13:09:00] 已修复安装版启动时报 `ERR_REQUIRE_ESM` 的主进程边界问题：`build:electron` 现在会额外写入 `dist-electron/package.json`，内容为 `{\"type\":\"commonjs\"}`。
+[2026-06-06 13:09:00] 回归验证已通过：`dist-electron/package.json` 产物存在，`npm test`、`npm run lint`、`npm run build`、`npm run dist:win` 全绿；直接启动 `release-dist/win-unpacked/CommentTools.exe` 5 秒后进程仍存活，未再出现主进程 ESM 崩溃。
+[2026-06-06 13:17:00] 已修复 `dist-electron/package.json` 的 BOM 问题：构建脚本改为 `-Encoding Ascii`，生成文件字节头为 `7B 22 74`，可被安装版正常解析为 JSON。
+[2026-06-06 13:17:00] 已修复安装版仍加载 `http://localhost:5173` 的问题：新增 `src/electron/rendererPaths.ts`，开发态继续走 Vite URL，安装态改为加载本地 `dist/src/canvas/index.html` 与 `dist/src/toolbar/index.html`。
+[2026-06-06 13:17:00] 最新回归验证已通过：`npm test` 19 文件 84 测试全绿，`npm run lint`、`npm run build`、`npm run dist:win` 通过；直接启动 `release-dist/win-unpacked/CommentTools.exe` 5 秒后进程仍存活，且不再输出 `ERR_CONNECTION_REFUSED` 到 `localhost:5173`。
+[2026-06-06 13:24:00] 已修复工具栏窗口高度过小导致上下显示不全的问题：`getToolbarBounds()` 从 `96x452` 调整为 `96x500`，以完整容纳当前包含 `settings` 在内的整列按钮。
+[2026-06-06 13:24:00] 已修复独立设置面板离工具栏过远的问题：`getSettingsBounds()` 的窗口间距收口为 0，`settings-window-shell` 右内边距收口为 2px，最终视觉上与工具栏只保留约 2px 间距。
+[2026-06-06 13:24:00] 本轮回归验证已通过：`window-config.test.ts` 与 `toolbar-style.test.ts` 聚焦测试全绿，随后 `npm test` 19 文件 85 测试全绿，`npm run lint` 与 `npm run build` 通过，相关文件诊断为空。

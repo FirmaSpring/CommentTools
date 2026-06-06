@@ -1,0 +1,21 @@
+[Date]: 2026-06-06 13:24:00
+[Type]: Fix
+[Component]: Toolbar Window / Settings Window
+[Changes]:
+- 修复工具栏窗口高度不足导致上下按钮显示不全
+- 修复独立设置面板离工具栏过远的问题，改为视觉上约 2px 贴边
+- 增加窗口边界与样式回归测试，防止后续尺寸再次回退
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- 独立窗口 UI 的裁切问题优先看 BrowserWindow 边界，而不是只看 CSS。
+- 面板贴边效果要同时控制窗口坐标和容器 padding。
+[Impact Analysis]:
+- 当前工具栏完整显示，设置面板与工具栏贴边关系更稳定。
+- 相关布局已被测试锁住，后续回归风险降低。
+[Performance Metrics]:
+- npm test: 19 files passed, 85 tests passed
+- npm run lint: passed
+- npm run build: passed

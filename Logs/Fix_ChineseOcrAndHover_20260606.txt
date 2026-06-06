@@ -1,0 +1,26 @@
+[Date]: 2026-06-06 10:20:30
+[Type]: Fix
+[Component]: src/canvas/CanvasApp.tsx, src/canvas/ocrEngine.ts, src/canvas/ocrPreprocess.ts, src/canvas/textRecognition.ts, src/toolbar/ToolbarApp.tsx, src/toolbar/toolbarHitTest.ts
+[Changes]:
+- 将工具栏窗口切换为紧凑窗口始终接管鼠标的稳定策略，避免图标按钮边缘反复切换穿透导致光标抽搐。
+- 为 OCR 参数组增加中文优先配置，首轮识别会屏蔽英文字母干扰，失败后再回退到通用配置。
+- 为 OCR 预处理新增按列墨迹分段逻辑，把连笔短词切成多个字符片段后逐段识别并拼接结果。
+- 将识别框文案改为通用“手写识别候选 / OCR 识别中”，去掉连笔场景下误导性的“几笔”展示。
+[Variables Added]:
+- keepWindowInteractive
+[Functions Added]:
+- getInkColumnSegments(mask, width, height)
+- createProcessedRecognitionCanvas(strokes, bounds)
+- getRecognitionStrokeImageDataUrls(strokes, bounds)
+[Lessons Learned]:
+- 连笔中文短词更适合先做列投影切分，再逐段 OCR，而不是整块一次性识别。
+- 紧凑 Electron 窗口中的 hover 抽搐，很多时候是窗口级穿透切换过于积极，不是单纯 CSS cursor 问题。
+[Impact Analysis]:
+- 中文手写短词的识别准确率提升，英文字母误判概率下降。
+- 工具栏 hover 体验更稳定，按钮与图标边缘不再频繁闪烁。
+- 已替换的规范字体仍会继续被排除在 OCR 来源之外。
+[Performance Metrics]:
+- focused tests: 4 files passed, 22 tests passed, Duration 0.67s
+- npm test: 15 files passed, 67 tests passed, Duration 0.97s
+- npm run lint: passed
+- npm run build: passed / Vite build 534ms

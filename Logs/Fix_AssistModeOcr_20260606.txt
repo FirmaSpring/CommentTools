@@ -1,0 +1,24 @@
+[Date]: 2026-06-06 01:53:00
+[Type]: Fix
+[Component]: src/canvas/shapeRecognition.ts, src/canvas/ocrEngine.ts
+[Changes]:
+- 放宽矩形识别规则，不再要求所有点都严格落在两条唯一 X/Y 坐标上，而是改为基于边缘贴合率与四角覆盖率判断。
+- 为辅助模式补充“手绘方框”和“手绘圆形”回归测试，覆盖更接近真实书写抖动的输入。
+- 为 OCR 新增 `getOcrAttemptProfiles()`，识别时先用单行模式，再回退到单块模式。
+- 为 OCR 统一设置 `user_defined_dpi=300` 和 `preserve_interword_spaces=0`，提升手写中文识别稳定性。
+[Variables Added]:
+- OCR_PSM_SINGLE_LINE
+- OCR_PSM_SINGLE_BLOCK
+[Functions Added]:
+- getOcrAttemptProfiles()
+[Lessons Learned]:
+- 辅助模式不能依赖“几何完美输入”，必须按真实手绘抖动做容差识别。
+- OCR 只跑一套默认参数对中文手写不够稳，至少需要按不同分段模式做最小重试。
+[Impact Analysis]:
+- 用户画出的不规则圆和方块更容易被辅助模式吸附成规则图形。
+- OCR 在短中文词组和单行手写场景下的识别成功率更高。
+[Performance Metrics]:
+- focused tests: 2 files passed, 12 tests passed, Duration 0.64s
+- npm test: 13 files passed, 55 tests passed, Duration 0.96s
+- npm run lint: passed
+- npm run build: passed / Vite build 525ms

@@ -1,0 +1,25 @@
+[Date]: 2026-06-06 13:09:00
+[Type]: Fix
+[Component]: Electron Packaging / Main Process
+[Changes]:
+- 修复安装版启动时报 `ERR_REQUIRE_ESM` 的问题
+- 在 `build:electron` 脚本中为 `dist-electron/` 写入局部 `package.json`
+- 让 `dist-electron/src/electron/*.js` 在安装版运行时统一按 CommonJS 加载
+- 重新构建 Windows 安装包并验证 `win-unpacked` 可执行文件可正常启动
+[Variables Added]:
+- None
+[Functions Added]:
+- None
+[Lessons Learned]:
+- Electron 主进程打包时，CommonJS 入口文件的依赖也必须处于正确的包边界，否则安装版仍会在运行时崩溃。
+- 写入局部 `package.json` 比大范围改扩展名或改根模块类型更稳。
+[Impact Analysis]:
+- 用户安装后启动程序时，不再因为 `appSettings.js` 被当成 ESM 而弹出主进程 JavaScript error。
+- 新安装器产物已经重新生成，可直接分发使用。
+[Performance Metrics]:
+- npm run build:electron: passed
+- npm test: 18 files passed, 82 tests passed
+- npm run lint: passed
+- npm run build: passed
+- npm run dist:win: passed
+- release-dist/win-unpacked/CommentTools.exe: startup verified

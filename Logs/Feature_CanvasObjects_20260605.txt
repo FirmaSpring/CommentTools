@@ -1,0 +1,28 @@
+[Date]: 2026-06-05 21:42:53
+[Type]: Feature
+[Component]: src/canvas/canvasObjects.ts
+[Changes]:
+- 新增统一画布对象栈模块 `src/canvas/canvasObjects.ts`
+- 支持 `stroke`、`shape`、`text` 三类对象按追加顺序共存于同一历史栈
+- 提供跨类型统一撤回 `undoLastCanvasObject` 与一键清空 `clearCanvasObjects`
+- 新增 `TestFile/unit/canvas-objects.test.ts` 以 TDD 锁住顺序、撤回和清空行为
+[Variables Added]:
+- 无
+[Functions Added]:
+- createCanvasObjectsState
+- appendStrokeObject
+- appendShapeObject
+- appendTextObject
+- undoLastCanvasObject
+- clearCanvasObjects
+[Lessons Learned]:
+- 统一对象栈应先保持纯数据操作，避免在识别能力未完成前把渲染、识别和历史管理耦合到一起
+- 以对象 `kind` 作为判别字段，可以为后续识别与渲染扩展保留稳定边界
+[Impact Analysis]:
+- 为后续规则图形识别与文字识别提供统一历史容器
+- 后续集成层切换到对象化撤回时，不再需要分别维护多套历史栈
+[Performance Metrics]:
+- `npm test -- TestFile/unit/canvas-objects.test.ts`: 3/3 通过，约 0.8s
+- `npm test -- TestFile/unit/canvas-state.test.ts TestFile/unit/canvas-objects.test.ts`: 7/7 通过，约 0.8s
+- `npm run build`: 通过，Vite 构建约 408ms，Electron 主进程编译通过
+- `npm run lint`: 未通过，环境缺少 `eslint` 可执行依赖

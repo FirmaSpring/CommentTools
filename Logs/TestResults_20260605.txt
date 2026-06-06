@@ -1,0 +1,382 @@
+[Date]: 2026-06-05 20:15:09
+[Type]: Test
+[Component]: Canvas State / Build Pipeline
+[Changes]:
+- 新增 `TestFile/unit/canvas-state.test.ts`
+- 验证笔画提交、撤回、清屏、拖尾过滤逻辑
+- 修复 Vite 多入口构建配置，支持 `toolbar` 与 `canvas` 页面一起构建
+[Variables Added]:
+- stateRef
+- activeToolRef
+- colorRef
+- sizeRef
+- trailRef
+- isDrawingRef
+- frameRef
+[Functions Added]:
+- createCanvasState
+- beginStroke
+- appendPoint
+- finishStroke
+- commitStroke
+- undoLastStroke
+- clearCommittedStrokes
+- getRenderableStrokes
+[Lessons Learned]:
+- 透明画布项目必须把绘制状态抽离成纯逻辑模块，否则撤回与拖尾会互相耦合
+- Vite 默认只构建根入口，双页面 Electron 项目需要显式声明多入口
+[Impact Analysis]:
+- Toolbar 与 Canvas 的通信链路已经稳定，后续增加更多工具时只需要扩展 IPC 和 canvasState
+- 构建链路可用，后续可以继续接入 Electron 打包
+[Performance Metrics]:
+- `vitest run TestFile/unit/canvas-state.test.ts`: 4/4 通过，约 0.9s
+- `npm run build`: 通过，Vite 构建约 396ms
+
+[Date]: 2026-06-05 20:49:15
+[Type]: Test
+[Component]: Toolbar Layout / Window Bounds / Electron Entry
+[Changes]:
+- 新增 `TestFile/unit/package-config.test.ts`
+- 更新工具栏宽度与窗口贴边相关单元测试
+- 验证 Electron 主进程入口路径与构建脚本输出一致
+[Variables Added]:
+- 无
+[Functions Added]:
+- readPackageJson
+[Lessons Learned]:
+- Electron 启动失败时需要先核对 `package.json` 的 `main` 和 `build:electron` 产物路径，不能只看 TypeScript 编译是否成功
+- 工具栏窗口宽度与实际视觉宽度需要一起收口，否则会出现“代码改窄了但视觉仍显胖”的错觉
+[Impact Analysis]:
+- `npm run dev` 已可持续运行，不再因为主进程入口路径错误直接退出
+- 工具栏横向尺寸与贴边行为有自动化测试兜底
+[Performance Metrics]:
+- `vitest run`: 15/15 通过，约 0.9s
+- `npm run build`: 通过
+- `npm run dev`: 启动后持续运行超过 10s
+- `npm run lint`: 未通过，原因是项目当前缺少 `eslint` 可执行依赖
+
+[Date]: 2026-06-05 20:58:28
+[Type]: Test
+[Component]: Toolbar Interaction / Theme Toggle / Edge Hover
+[Changes]:
+- 扩展 `toolbar-model.test.ts`，验证主题按钮顺序、主题切换和更大的工具栏宽度
+- 扩展 `window-config.test.ts`，验证工具栏窗口向左回退 12px 且整体稍微放大
+- 扩展 `toolbar-hit-test.test.ts`，验证鼠标离开工具栏边缘后的 90ms 缓冲逻辑
+[Variables Added]:
+- themeMode
+- leaveTimerRef
+- ignoreMouseRef
+[Functions Added]:
+- getDefaultThemeMode
+- toggleThemeMode
+- getToolbarMouseLeaveDelay
+- clearLeaveTimer
+- handleInteractiveEnter
+- handleInteractiveLeave
+[Lessons Learned]:
+- 鼠标样式闪烁不仅是 CSS 光标问题，还和 Electron 穿透切换频率有关，必须同时做边缘缓冲和重复状态抑制
+- 再次点击高亮按钮时如果设置面板参与正常流布局，会造成主工具栏视觉位移，绝对定位更稳
+[Impact Analysis]:
+- 工具栏在边缘区域的鼠标样式更稳定，减少了按钮边界抖动
+- 深浅色模式切换已成为可验证的稳定功能，后续可继续细调视觉而不易回归
+[Performance Metrics]:
+- `npm test`: 17/17 通过，约 0.9s
+- `npm run build`: 通过
+
+[Date]: 2026-06-05 21:30:08
+[Type]: Test
+[Component]: Toolbar Model / Window Config / Task 1
+[Changes]:
+- 先将 `toolbar-model.test.ts` 更新为包含 `text` 工具的增强版顺序断言
+- 运行聚焦测试并确认红灯仅来自 `toolbarModel` 缺少 `text`，`windowConfig` 已满足增强高度
+- 对 `src/toolbar/toolbarModel.ts` 做最小实现，补齐 `text` 工具定义与类型
+[Variables Added]:
+- 无
+[Functions Added]:
+- 无
+[Lessons Learned]:
+- 现有 `windowConfig` 与 `electron/main.ts` 已提前对齐增强版工具栏高度，本次 Task 1 的真实缺口只在工具模型
+- 先用聚焦测试识别最小缺口，可以避免误改已正确的窗口配置代码
+[Impact Analysis]:
+- 工具栏模型已能表达后续的 `text` 工具按钮
+- 工具栏窗口高度断言继续覆盖增强版布局，后续 UI 扩展不易回归
+[Performance Metrics]:
+- `npm test -- TestFile/unit/toolbar-model.test.ts TestFile/unit/window-config.test.ts` 首次执行：1 failed, 8 passed，约 0.9s
+- `npm test -- TestFile/unit/toolbar-model.test.ts TestFile/unit/window-config.test.ts` 修复后：2 passed, 9 passed，约 0.8s
+- `npm run build`: 通过
+- `npm run lint`: 未通过，环境缺少 `eslint` 可执行依赖
+
+[Date]: 2026-06-05 21:32:50
+[Type]: Test
+[Component]: Toolbar Settings / Task 2
+[Changes]:
+- 新增 `TestFile/unit/toolbar-settings.test.ts`
+- 以 TDD 锁住 `pen` 的 `rgb`、`assistMode`，`eraser` 的 `clearAll`，以及 `text` 不显示设置
+- 新增 `src/toolbar/toolbarSettings.ts` 纯逻辑模型，提供设置分区查询与子菜单显隐判断
+[Variables Added]:
+- 无
+[Functions Added]:
+- getToolSettingSections
+- shouldShowToolSubmenu
+[Lessons Learned]:
+- 把工具设置面板抽成纯逻辑映射后，可以先稳定行为再接 UI，能显著降低 `ToolbarApp` 状态分支复杂度
+- 对 `text` 工具显式返回空分区并单测锁住，可避免后续 UI 复用旧子菜单逻辑时回归
+[Impact Analysis]:
+- Task 3 现在可以直接消费 `toolbarSettings`，减少在组件内部硬编码条件判断
+- `pen` 与 `eraser` 的设置入口边界已被测试固定，后续扩展更安全
+[Performance Metrics]:
+- `npm test -- TestFile/unit/toolbar-settings.test.ts` 首次执行：1 failed（module not found），约 0.9s
+- `npm test -- TestFile/unit/toolbar-settings.test.ts` 修复后：1 passed, 4 passed，约 0.8s
+- `npm run lint`: 未通过，环境缺少 `eslint` 可执行依赖
+
+[Date]: 2026-06-05 21:39:30
+[Type]: Test
+[Component]: Toolbar UI / Task 3
+[Changes]:
+- 在 `TestFile/unit/toolbar-settings.test.ts` 新增 RGB 互转与通道约束测试，并先验证红灯
+- 将 `toolbarSettings` 接入 `ToolbarApp` 与 `SubmenuPanel`，完成 `text` 工具按钮、RGB 取色板、辅助模式开关和橡皮 `清除所有`
+- 重写 `src/toolbar/Toolbar.css`，切换为简洁平面风和内嵌滑块样式，并补齐 `electron/main.ts`、`CanvasApp.tsx` 的消息类型收口
+[Variables Added]:
+- rgbColor
+- assistMode
+- RGB_CHANNELS
+[Functions Added]:
+- hexToRgbColor
+- rgbColorToHex
+- syncColorState
+- handleRgbChange
+- handleAssistModeChange
+[Lessons Learned]:
+- RGB 输入如果没有纯逻辑 helper 先收口，UI 层很容易出现预设色、数字输入和实际 IPC 颜色不同步
+- `text` 工具在识别流程未接入前，必须先从旧子菜单逻辑剥离，否则会复用错误的画笔设置面板
+[Impact Analysis]:
+- 工具栏现在具备 Task 3 需要的主交互元素，后续 Task 7 可直接复用 `assistMode` 和 `text` 的状态透传
+- 画布和主进程已接受新增消息类型，本次 UI 扩展不会破坏现有开发态和构建链路
+[Performance Metrics]:
+- `npm test -- TestFile/unit/toolbar-settings.test.ts`：首次执行 2 failed, 4 passed；修复后包含在聚焦测试中全绿
+- `npm test -- TestFile/unit/toolbar-model.test.ts TestFile/unit/toolbar-settings.test.ts TestFile/unit/toolbar-hit-test.test.ts`：3 passed, 15 passed，约 0.9s
+- `npm run build`：通过，Vite 构建约 404ms
+- `npm run lint`：未通过，环境缺少 `eslint` 可执行依赖
+
+[Date]: 2026-06-05 21:42:53
+[Type]: Test
+[Component]: Canvas Objects / Task 4
+[Changes]:
+- 新增 `TestFile/unit/canvas-objects.test.ts`
+- 先验证 `canvasObjects` 模块缺失导致红灯，再补齐统一对象栈最小实现
+- 新增 `src/canvas/canvasObjects.ts`，支持 `stroke` / `shape` / `text` 共用历史栈，并提供统一 `undo` / `clear`
+[Variables Added]:
+- 无
+[Functions Added]:
+- createCanvasObjectsState
+- appendStrokeObject
+- appendShapeObject
+- appendTextObject
+- undoLastCanvasObject
+- clearCanvasObjects
+[Lessons Learned]:
+- 先把统一对象栈收口成纯逻辑模块，可以在不改 `CanvasApp` 的前提下先稳定多对象历史语义
+- 通过“模块不存在”红灯确认测试入口后，再补最小实现，能避免提前设计集成细节
+[Impact Analysis]:
+- 后续 Task 5/6 生成的 shape 与 text 结果已有统一挂载位置
+- Task 7 可以直接基于当前对象栈接管撤回和清空命令
+[Performance Metrics]:
+- `npm test -- TestFile/unit/canvas-objects.test.ts` 首次执行：1 failed（module not found），约 0.8s
+- `npm test -- TestFile/unit/canvas-objects.test.ts` 修复后：1 passed, 3 passed，约 0.8s
+- `npm test -- TestFile/unit/canvas-state.test.ts TestFile/unit/canvas-objects.test.ts`：2 passed, 7 passed，约 0.8s
+- `npm run build`：通过，Vite 构建约 408ms，Electron 主进程编译通过
+- `npm run lint`：未通过，环境缺少 `eslint` 可执行依赖
+
+[Date]: 2026-06-05 21:47:02
+[Type]: Test
+[Component]: Shape Recognition / Task 5
+[Changes]:
+- 新增 `TestFile/unit/shape-recognition.test.ts`
+- 先验证 `shapeRecognition` 模块缺失导致红灯，再补齐最小纯逻辑实现
+- 新增 `src/canvas/shapeRecognition.ts`，支持 `line` / `ellipse` / `rect` / `arrow` / `freehand` 与 `high` / `low` 置信度分类
+[Variables Added]:
+- 无
+[Functions Added]:
+- classifyShapeCandidate
+- isClosedPath
+- isLine
+- isRectangle
+- isEllipse
+- isArrow
+- getDistance
+- getDistanceToSegment
+- getBounds
+[Lessons Learned]:
+- 把辅助图形识别先收口为纯逻辑模块，可以先稳定分类边界，再在 Task 7 中安全接入 Canvas 集成层
+- 对箭头和闭合图形优先判定，可以避免最小实现阶段被直线兜底误吞掉更具体的形状
+[Impact Analysis]:
+- Task 7 已有可复用的图形分类入口，后续只需在抬笔时接入分类结果与对象栈
+- 单测已固定五类最小识别行为，后续优化阈值时更容易发现回归
+[Performance Metrics]:
+- `npm test -- TestFile/unit/shape-recognition.test.ts` 首次执行：1 failed（module not found），约 0.8s
+- `npm test -- TestFile/unit/shape-recognition.test.ts` 修复后：1 passed, 5 passed，约 0.8s
+- `npm test`：8 passed, 31 passed，约 1.0s
+- `npm run build`：通过，Vite 构建约 404ms，Electron 主进程编译通过
+- `npm run lint`：未通过，环境缺少 `eslint` 可执行依赖
+- `GetDiagnostics`：`shapeRecognition.ts` 与 `shape-recognition.test.ts` 均无诊断错误
+
+[Date]: 2026-06-05 21:50:06
+[Type]: Test
+[Component]: Text Recognition / Task 6
+[Changes]:
+- 新增 `TestFile/unit/text-recognition.test.ts`
+- 先验证 `textRecognition` 模块缺失导致红灯，再补齐最小纯逻辑实现
+- 新增 `src/canvas/textRecognition.ts`，支持停笔 3 秒触发、连续手写分组和字号估算
+[Variables Added]:
+- TEXT_RECOGNITION_DELAY_MS
+- HANDWRITING_LINE_GAP_PX
+- HANDWRITING_STROKE_GAP_PX
+- HANDWRITING_STROKE_GAP_MS
+- MINIMUM_TEXT_FONT_SIZE
+[Functions Added]:
+- shouldTriggerTextRecognition
+- groupHandwritingBatch
+- estimateTextFontSize
+[Lessons Learned]:
+- 文字识别的首步应先冻结“何时触发”和“哪些笔迹属于同一组”的规则，避免在集成 OCR 前就把时序和空间边界写死在 UI 中
+- 给字号估算加最小值钳制，可以让后续识别条在小字场景下仍保持可读，不必等待完整排版策略落地
+[Impact Analysis]:
+- 为 Task 7 接入 3 秒停笔后的识别条提供稳定纯逻辑入口
+- 当前实现不依赖 Canvas 或 Electron 运行态，后续可单独调整阈值并持续由单测兜底
+[Performance Metrics]:
+- `npm test -- TestFile/unit/text-recognition.test.ts` 首次执行：1 failed（module not found），约 0.8s
+- `npm test -- TestFile/unit/text-recognition.test.ts` 修复后：1 passed, 5 passed，约 0.8s
+- `npm test -- TestFile/unit/text-recognition.test.ts TestFile/unit/shape-recognition.test.ts TestFile/unit/canvas-objects.test.ts`：3 passed, 13 passed，约 0.9s
+- `npm test`：9 passed, 36 passed，约 1.8s
+- `npm run build`：通过，Vite 构建约 405ms，Electron 主进程编译通过
+- `npm run lint`：未通过，环境缺少 `eslint` 可执行依赖
+- `GetDiagnostics`：`textRecognition.ts` 与 `text-recognition.test.ts` 均无诊断错误
+
+[Date]: 2026-06-05 21:58:30
+[Type]: Test
+[Component]: Canvas Integration / Task 7
+[Changes]:
+- 在 `TestFile/unit/canvas-state.test.ts` 新增对象栈同步收口测试，在 `TestFile/unit/canvas-objects.test.ts` 补充文本对象统一撤回断言，先让集成缺口显式变红
+- 扩展 `src/canvas/canvasState.ts` 与 `src/canvas/canvasObjects.ts`，提供对象栈到已提交笔迹的同步能力和 shape/text 所需元数据
+- 重构 `src/canvas/CanvasApp.tsx`，把 assistMode、shapeRecognition、textRecognition 基础流程、统一 undo/clear、基础识别条与对象化渲染真正接入
+[Variables Added]:
+- objectStateRef
+- assistModeRef
+- textRecognitionModeRef
+- handwritingStrokeMetaRef
+- recognitionTimerRef
+- objectSequenceRef
+- recognitionBar
+[Functions Added]:
+- syncCommittedStrokesWithObjectIds
+- getCanvasObjectStrokeIds
+- getStrokeBounds
+- mergeBounds
+- isSameTargetIds
+- createObjectId
+- drawShape
+- drawTextObject
+- clearRecognitionTimer
+- syncStrokesWithObjectStack
+- scheduleTextRecognition
+[Lessons Learned]:
+- 统一对象栈只有在“渲染、撤回、清空”三个入口都以它为准时才真正成立，只改历史结构而不改画布收口逻辑会留下假集成
+- 文本工具基础流可以先以“停笔分组 + 占位识别条 + 文字对象”落地，再逐步替换成真实 OCR，能降低一次性集成复杂度
+[Impact Analysis]:
+- 画布现在能够把普通笔迹、辅助图形和基础文字对象纳入同一套撤回/清空语义
+- `assistMode` 与 `text` 工具已从 Toolbar IPC 贯通到 Canvas 状态机，为后续增强真实识别结果和确认交互留出稳定入口
+[Performance Metrics]:
+- `npm test -- TestFile/unit/canvas-state.test.ts TestFile/unit/canvas-objects.test.ts TestFile/unit/shape-recognition.test.ts TestFile/unit/text-recognition.test.ts`：4 files passed, 19 tests passed，约 0.9s
+- `npm test`：9 files passed, 38 tests passed，约 1.6s
+- `npm run build`：通过，Vite 构建约 412ms，Electron 主进程编译通过
+- `npm run lint`：未通过，环境缺少 `eslint` 可执行依赖
+- `GetDiagnostics`：`CanvasApp.tsx`、`canvasState.ts`、`canvasObjects.ts` 与新增测试无诊断错误
+
+[Date]: 2026-06-05 22:05:08
+[Type]: Test
+[Component]: Task 8 Final Validation / Documentation / Diagnostics
+[Changes]:
+- 补齐 `ProjectBasics/Function.txt` 缺失的工具模型、窗口配置与命中判断函数登记
+- 补齐 `ProjectBasics/Variable.txt` 缺失的关键常量与运行时引用登记
+- 修复 `src/toolbar/SubmenuPanel.tsx` 可访问性诊断错误，并为 `src/toolbar/ToolbarApp.tsx` 的工具按钮补充 `type="button"`
+[Variables Added]:
+- 无
+[Functions Added]:
+- 无
+[Lessons Learned]:
+- 收口阶段需要再次对照真实导出函数和关键常量，避免 `ProjectBasics` 只覆盖局部新增实现
+- 最终诊断里优先清理 Error 级问题，再将工程化 Warning 作为剩余风险显式记录，更利于交付判断
+[Impact Analysis]:
+- 项目文档、测试记录与当前代码状态已重新对齐，后续继续推进增强计划时不必再补历史台账
+- 当前剩余诊断不阻塞 `test/build/dev` 主流程，但提示后续可继续把内联样式和 TypeScript 配置收口成更稳定的工程基线
+[Performance Metrics]:
+- `npm test`：9 files passed, 38 tests passed，约 1.90s
+- `npm run build`：通过；Vite 产物构建约 409ms，Electron 主进程编译通过
+- `npm run lint`：失败；当前环境未安装 `eslint` 可执行文件
+- `GetDiagnostics`：`SubmenuPanel.tsx` 与 `ToolbarApp.tsx` Error 已清零；剩余为 `CanvasApp.tsx` / `ToolbarApp.tsx` / `SubmenuPanel.tsx` 内联样式 Warning、`tsconfig.json` / `tsconfig.node.json` 配置 Warning
+- `npm run dev`：进程仍在运行，22:04-22:05 期间仅见 `SubmenuPanel.tsx`、`ToolbarApp.tsx` 的 HMR 更新与页面 reload
+
+[Date]: 2026-06-06 00:13:30
+[Type]: Update
+[Component]: Lint Hardening / Assist Preview / OCR Confirmation
+[Changes]:
+- 安装并接通 `eslint`、`@typescript-eslint/parser`、`@typescript-eslint/eslint-plugin`
+- 新增 `.eslintrc.cjs` 与 `.eslintignore`，补齐 `tsconfig.json` / `tsconfig.node.json` 的 `forceConsistentCasingInFileNames`
+- 修复 `clearCanvasObjects` / `clearCommittedStrokes` 签名调整后的回归问题，恢复 `lint/test/build` 一致通过
+- 辅助模式新增实时预览吸附：绘制过程中对高置信度直线、矩形、椭圆、箭头显示规则化预览
+- 文本识别新增确认条：支持编辑候选文本、确认替换、保留手写与重置候选；同时将识别浮层样式迁移至 `src/canvas/Canvas.css`
+[Variables Added]:
+- previewShapeTypeRef
+- recognitionBar（扩展为 suggestionText / draftText / bounds）
+[Functions Added]:
+- getAssistPreviewShapeType
+- buildRecognitionDraft
+- replaceStrokeObjectsWithText
+- buildRecognitionBarState
+- handleRecognitionDraftChange
+- handleKeepHandwriting
+- handleRetryRecognition
+- handleConfirmRecognition
+[Lessons Learned]:
+- 先打通 lint 再继续叠功能，可以更快暴露签名回归和无用依赖残留
+- 识别确认条应先抽成纯逻辑草稿生成和对象替换 helper，再接入 Canvas UI，组件职责会更清晰
+- 将识别浮层样式外置到 CSS 能同时减少诊断噪音和重复样式代码
+[Impact Analysis]:
+- 工程质量门禁已恢复到 `npm run lint`、`npm test`、`npm run build` 全部通过
+- 辅助模式从“抬笔后规则化”升级为“绘制中实时预览 + 抬笔提交”
+- 文本识别从占位提示升级为可确认、可编辑、可保留原手写的基础交互闭环
+[Performance Metrics]:
+- `npm run lint`：通过
+- `npm test`：9 files passed, 42 tests passed
+- `npm run build`：通过；Vite 构建约 401ms，Electron 主进程编译通过
+
+[Date]: 2026-06-06 00:31:24
+[Type]: Fix
+[Component]: Toolbar Window Split / Cursor Hotspot
+[Changes]:
+- 将工具栏窗口从大透明单窗改为紧凑 `toolbarWindow`，新增独立 `settingsWindow` 承载二级设置面板
+- `ToolbarApp` 新增 `view=toolbar/settings` 双视图渲染与 `toolbar-state-sync` 跨窗口状态同步
+- `SubmenuPanel` 新增 `standalone` 模式，允许在独立设置窗口内完整显示
+- 调整 `windowConfig`：工具栏窗口变为 `96x452`，设置窗口变为 `280x520`
+- 修正画笔光标热点，改为笔尖起笔；橡皮仍保持圆心热点
+[Variables Added]:
+- settingsWindow
+- stateRef（ToolbarApp 跨窗口同步快照）
+[Functions Added]:
+- shouldShowSettingsWindow
+- emitToolbarState
+- getSettingsBounds
+- createSettingsWindowOptions
+- getCursorHotspot
+[Lessons Learned]:
+- 设置面板若继续和工具栏共用一个透明窗口，容易同时带来内容裁切和透明区光标竞争；拆成独立窗口后问题边界更清晰
+- 光标 SVG 不只要外观对，热点也必须跟真实语义一致，否则会让用户感知为“笔尖位置错了”
+[Impact Analysis]:
+- 设置面板不再因工具栏窗口高度不足而显示不全
+- 工具栏附近的大透明命中区被显著缩小，笔光标在工具栏/设置区域的切换抖动风险下降
+- 需要重启 Electron 主进程才能使新窗口结构生效，本次已重启 `npm run dev`
+[Performance Metrics]:
+- `npm test -- TestFile/unit/window-config.test.ts TestFile/unit/toolbar-model.test.ts`：2 files passed, 11 tests passed
+- `npm test`：9 files passed, 44 tests passed
+- `npm run lint`：通过
+- `npm run build`：通过；Vite 构建约 494ms，Electron 主进程编译通过

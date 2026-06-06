@@ -1,0 +1,17 @@
+Project Purpose: 基于 Electron 的桌面批注工具，提供悬浮黑球入口、垂直工具栏、独立设置窗口、透明画布层、规则图形辅助、手写 OCR 替换、系统级快捷键配置、Windows 自启动、设置页退出程序能力和自定义画笔程序图标。
+Architecture: Electron Main Process 管理 Canvas Window、Toolbar Window 与独立 Settings Window；React 负责工具栏、画笔设置和系统设置 UI；Canvas 负责透明画布绘制、统一对象栈与 OCR 确认条；主进程额外负责应用设置持久化、全局快捷键注册、注册表自启动和退出程序 IPC；`build:electron` 会为 `dist-electron/` 写入无 BOM 的局部 `package.json` 以固定 CommonJS 包边界，避免安装版主进程把依赖误判为 ESM；安装版渲染入口会从本地 `dist/src/**/index.html` 加载，不再依赖开发态 `localhost`；IPC 负责工具、设置、撤回、清屏和跨窗口状态同步。
+Tech Stack: Electron, React, TypeScript, Vite, Vitest, HTML Canvas, tesseract.js, electron-builder, NSIS
+File Structure:
+- electron/: 主进程窗口与 IPC 管理
+- src/toolbar/: 悬浮黑球、垂直工具栏、独立设置窗口内容与主题样式
+- src/canvas/: 透明画布、绘制状态、统一对象栈、图形辅助、文字识别与 OCR
+- src/electron/: 窗口配置、设置持久化、自启动和快捷键纯逻辑
+- assets/icons/: 程序与安装器使用的画笔图标资源
+- TestFile/unit/: 纯逻辑单元测试
+- Logs/: 上下文、变更记录、测试结果
+- ProjectBasics/: 项目基础说明、变量和函数登记
+Coding Conventions:
+- TypeScript 严格模式
+- React 函数组件 + hooks
+- 复杂绘制逻辑优先抽到纯函数模块，先测后接 UI
+- SVG 图标与磨砂玻璃风格保持一致

@@ -1,0 +1,25 @@
+[Date]: 2026-06-05 20:50:00
+[Type]: Fix
+[Component]: Toolbar / Electron Startup / Package Config
+[Changes]:
+- 将主工具栏宽度从 56 收窄到 48，进一步解决“横着太胖”的问题
+- 将工具栏窗口宽度从 320 调整为 296，并保持 `x = display.width - width` 以紧贴右边缘
+- 去掉工具栏与设置面板的半透明玻璃样式，统一改为深色实底背景
+- 修复 `package.json` 中 Electron 主进程入口路径错误
+- 修复 `build:electron` 脚本错误地重命名 `dist-electron/electron/main.js` 的问题
+- 新增 `package-config.test.ts`，防止主进程入口路径再次回归
+[Variables Added]:
+- 无
+[Functions Added]:
+- readPackageJson
+[Lessons Learned]:
+- Electron 的启动故障不一定来自主进程代码本身，构建产物路径错误也会导致 `electron .` 直接退出
+- 对“太宽”的反馈要区分横向与纵向，窗口尺寸、面板尺寸和按钮尺寸需要同步调整
+[Impact Analysis]:
+- `npm run dev` 当前可以持续运行，便于继续做真实交互验证
+- 工具栏视觉更贴边、更瘦，且深色实底样式更稳定
+[Performance Metrics]:
+- `npm test`: 15/15 通过
+- `npm run build`: 通过
+- `npm run dev`: 启动后稳定运行超过 10 秒
+- `npm run lint`: 因缺少 `eslint` 依赖未执行成功

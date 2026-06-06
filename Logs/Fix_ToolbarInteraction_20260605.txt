@@ -1,0 +1,31 @@
+[Date]: 2026-06-05 20:59:00
+[Type]: Fix
+[Component]: Toolbar Interaction / Theme Toggle / Hover Stability
+[Changes]:
+- 修复工具栏边缘鼠标样式来回闪烁，增加 90ms 边缘离开缓冲
+- 缓存上一次 `toolbar-ignore-mouse` 状态，避免主进程收到重复切换消息
+- 将工具栏交互区扩展为轻量命中缓冲区，降低按钮边界抖动
+- 将主工具栏宽度从 48 调整为 56，窗口宽度调整为 336，并整体向左回退 12px
+- 新增深浅色切换按钮，支持深色与浅色面板实时切换
+- 将设置面板改为绝对定位侧滑，避免再次点击高亮按钮时主工具栏发生位移
+- 收敛悬停、点击和弹窗动画幅度，保留反馈感但减少跳动
+[Variables Added]:
+- themeMode
+- leaveTimerRef
+- ignoreMouseRef
+[Functions Added]:
+- getDefaultThemeMode
+- toggleThemeMode
+- getToolbarMouseLeaveDelay
+- clearLeaveTimer
+- handleInteractiveEnter
+- handleInteractiveLeave
+[Lessons Learned]:
+- Electron 透明工具栏的“边缘效应”本质上是穿透开关和底层画布光标竞争，不能只靠改 CSS
+- 工具按钮的 `cursor: pointer` 会放大视觉切换感，批注工具栏内统一使用普通鼠标更符合原始需求
+[Impact Analysis]:
+- 工具栏操作更稳，误触和鼠标闪烁感明显下降
+- 主题切换为后续更多视觉定制预留了稳定入口
+[Performance Metrics]:
+- `npm test`: 17/17 通过
+- `npm run build`: 通过

@@ -1,0 +1,22 @@
+Task | Priority | Status | Notes
+Task 1 - 收口工具栏模型与窗口尺寸 | High | Done | 已完成 TDD：先红后绿；`toolbarModel` 已补齐 `text`，`windowConfig` 与 `electron/main.ts` 现状已符合计划
+Task 2 - 抽出工具栏设置模型 | High | Done | 已完成 TDD：新增 `toolbar-settings.test.ts` 与 `toolbarSettings.ts`，锁住 pen/eraser/text 设置分区与子菜单显隐
+Task 3 - 重做工具栏 UI | High | Done | 已完成 TDD：新增 RGB 互转测试并先红后绿；`ToolbarApp`/`SubmenuPanel`/`Toolbar.css` 已接入 `toolbarSettings`，完成 text/RGB/assistMode/clearAll
+Task 4 - 扩展对象栈 | High | Done | 已完成 TDD：新增 `canvas-objects.test.ts` 与 `canvasObjects.ts`，锁住并实现统一对象栈的追加、撤回和清空
+Task 5 - 辅助图形识别 | High | Done | 已完成 TDD：新增 `shape-recognition.test.ts` 与 `shapeRecognition.ts`，支持 line/ellipse/rect/arrow/freehand 与 high/low 置信度最小分类
+Task 6 - 文字识别分组 | High | Done | 已完成 TDD：新增 `text-recognition.test.ts` 与 `textRecognition.ts`，锁住并实现停笔 3 秒触发、连续手写分组和字号估算最小逻辑
+Task 7 - 集成 Canvas 能力 | High | Done | 已完成 TDD：对象栈统一撤回/清空、assistMode 图形接入、text 工具停笔识别条与基础文字对象已接入 CanvasApp
+Task 8 - 文档、日志与运行态验证 | Medium | Done | 已更新 ProjectBasics、Context、TestResults、Fix 日志，并记录 dev/build/test/lint 结果
+Bugfix - 设置窗口滚动与背景恢复 | High | Done | `SubmenuPanel` 已加入内部滚动区，独立 settingsWindow 面板背景恢复为实体面板底色
+Bugfix - 真实 OCR 与整组替换 | High | Done | 已安装并接入 `tesseract.js`，离屏 canvas 手写笔迹转图片后执行 OCR，确认替换按完整 `targetIds` 整组生效
+Bugfix - 20260606 验证与日志更新 | Medium | Done | `npm test`、`npm run lint`、`npm run build` 已通过，`npm run dev` 已重启验证并记录到日志
+Feature - settings 按钮与系统设置面板 | High | Done | 工具栏新增 `settings` 按钮，独立设置窗口可在画笔/橡皮设置与系统设置之间切换
+Feature - 快捷键配置与冲突校验 | High | Done | 已实现 `Alt+单键` 默认快捷键、输入规范化、冲突校验和主进程动态注册
+Feature - 开机自动启动 | High | Done | 已实现基于 `process.execPath` 的 Windows Run 注册表写入与移除
+Feature - NSIS 安装器打包 | High | Done | 已接入 `electron-builder` 并生成 `release/CommentTools-Setup-0.0.0.exe`
+Feature - 设置页退出程序按钮 | High | Done | 已在 `SystemSettingsPanel` 底部加入 `退出程序` 按钮，并通过 `app:quit` IPC 调用主进程 `app.quit()`
+Feature - 画笔程序图标 | High | Done | 已生成 `assets/icons/brush-app-icon.{svg,png,ico}` 并接入 BrowserWindow 与 builder/NSIS 图标配置
+Fix - 默认发布链路检查与修复 | High | Done | 已修复 `npm run dist:win` 默认输出目录冲突，当前安装器稳定输出到 `release-dist/`
+Fix - 安装版主进程 ESM 崩溃 | Critical | Done | 已为 `dist-electron/` 写入局部 `package.json` 建立 CommonJS 边界，安装版启动不再报 `ERR_REQUIRE_ESM`
+Fix - 安装版启动链路收口 | Critical | Done | 已修复 `dist-electron/package.json` BOM 与安装版错误加载 localhost 两类问题，新安装包启动验证通过
+Fix - 工具栏和设置面板边界 | High | Done | 已增大工具栏窗口高度，设置面板视觉间距收口为约 2px，并补回归测试

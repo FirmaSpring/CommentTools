@@ -1,0 +1,26 @@
+[Date]: 2026-06-06 10:10:30
+[Type]: Fix
+[Component]: src/toolbar/ToolbarApp.tsx, src/toolbar/Toolbar.css, src/toolbar/toolbarHitTest.ts, src/canvas/CanvasApp.tsx, src/canvas/textRecognition.ts, src/canvas/canvasObjects.ts
+[Changes]:
+- 为工具栏交互区补充统一 `pointer` 光标策略，黑球、主工具栏面板和按钮统一使用稳定手形。
+- 为工具栏按钮内 SVG 关闭指针事件，减少图标边缘触发的鼠标样式抖动。
+- 新增 `buildPendingRecognitionDrafts()`，把 OCR 调度从“只识别最新一组”改为“扫描全屏所有未解决手写组”。
+- 新增 `getRecognizedTextTargetGroups()`，让全屏 OCR 显式跳过已经被规范字体替换过的笔画组。
+- 在确认替换后立即调度下一组待识别内容，使多组手写能按顺序继续识别。
+[Variables Added]:
+- None
+[Functions Added]:
+- getToolbarHoverCursor(isOverInteractiveArea)
+- buildPendingRecognitionDrafts(strokes, ignoredTargetGroups)
+- getRecognizedTextTargetGroups(state)
+[Lessons Learned]:
+- 工具栏 hover 抽搐不一定是窗口穿透本身，更常见的是按钮、图标和面板没有统一 cursor 策略。
+- “全屏 OCR” 更适合定义为“全屏未解决手写组扫描”，而不是整屏截图识别，否则会把已规范化文本和背景内容再次吸入 OCR。
+[Impact Analysis]:
+- 工具栏按钮 hover 时鼠标样式更稳定。
+- OCR 现在可以覆盖当前屏幕上所有未解决的手写组，同时避免再次识别已经应用过的规范字体。
+[Performance Metrics]:
+- focused tests: 3 files passed, 18 tests passed, Duration 0.65s
+- npm test: 15 files passed, 64 tests passed, Duration 1.02s
+- npm run lint: passed
+- npm run build: passed / Vite build 578ms

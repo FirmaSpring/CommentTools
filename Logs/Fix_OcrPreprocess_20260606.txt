@@ -1,0 +1,25 @@
+[Date]: 2026-06-06 08:11:30
+[Type]: Fix
+[Component]: src/canvas/ocrPreprocess.ts, src/canvas/CanvasApp.tsx
+[Changes]:
+- 新增 `ocrPreprocess.ts`，把 OCR 输入图像预处理拆成可测试的纯函数模块。
+- 实现 `createBinaryMask()`，将抗锯齿灰度图转换为黑白掩码，强化深色笔画与浅色背景的分离。
+- 实现 `applyOcrPreprocess()`，在二值化后执行 1 像素膨胀，让细笔画在 OCR 前更厚、更连续。
+- 将 `CanvasApp` 的离屏 OCR 图像导出链路接入预处理，OCR 现在识别的是增强后的黑白图。
+- 新增 `TestFile/unit/ocr-preprocess.test.ts`，覆盖二值化和笔画加粗两个核心场景。
+[Variables Added]:
+- None
+[Functions Added]:
+- createBinaryMask(pixels)
+- applyOcrPreprocess(pixels, width, height)
+[Lessons Learned]:
+- 对手写 OCR 来说，单纯调 `psm` 还不够，输入图像的黑白分离和笔画厚度同样关键。
+- 把图像预处理做成纯函数模块后，调参与回归都明显更稳定。
+[Impact Analysis]:
+- OCR 对浅灰抗锯齿边缘更不敏感，能更聚焦在真实笔画上。
+- 细笔画、断续笔画和较小字号的手写内容更容易被正确识别。
+[Performance Metrics]:
+- focused tests: 2 files passed, 5 tests passed, Duration 0.61s
+- npm test: 14 files passed, 57 tests passed, Duration 0.95s
+- npm run lint: passed
+- npm run build: passed / Vite build 515ms

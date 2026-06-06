@@ -1,0 +1,41 @@
+[Date]: 2026-06-05 20:16:00
+[Type]: Feature
+[Component]: Toolbar / Canvas / IPC
+[Changes]:
+- 搭建 Electron 双窗口结构
+- 实现右侧黑球入口与垂直磨砂工具栏
+- 实现侧边滑出的二级设置面板与 0.3s 动画
+- 接入画笔、橡皮、撤回、清屏、拖尾设置
+- 增加画布状态模块与测试
+[Variables Added]:
+- canvasWindow
+- toolbarWindow
+- stateRef
+- activeToolRef
+- colorRef
+- sizeRef
+- trailRef
+- isDrawingRef
+- frameRef
+[Functions Added]:
+- createWindow
+- createCanvasState
+- beginStroke
+- appendPoint
+- finishStroke
+- commitStroke
+- undoLastStroke
+- clearCommittedStrokes
+- getRenderableStrokes
+- drawFrame
+- handleToolClick
+- handleCanvasCommand
+[Lessons Learned]:
+- 撤回和清屏要基于“轨迹历史”而不是直接操作 Canvas 像素，否则后续高级特效无法维护
+- 工具栏与画布分窗后，逻辑边界更清晰，也更适合后续多屏支持
+[Impact Analysis]:
+- 当前代码已具备继续迭代批注功能的基础骨架
+- 后续新增图形工具、快捷键、截图能力时可直接复用现有 IPC 结构
+[Performance Metrics]:
+- 单元测试通过 4 项
+- 生产构建通过

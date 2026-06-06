@@ -1,0 +1,116 @@
+[Date]: 2026-06-05 21:32:50
+[Type]: Fix
+[Component]: Toolbar Settings
+[Changes]:
+- 新增 `src/toolbar/toolbarSettings.ts`，抽出工具栏设置分区的纯逻辑模型
+- 新增 `TestFile/unit/toolbar-settings.test.ts`，以 TDD 锁住 `pen` 的 `rgb/assistMode`
+- 锁住 `eraser` 的 `clearAll`、`text` 不显示设置，以及 `shouldShowToolSubmenu` 的返回规则
+[Variables Added]:
+- 无
+[Functions Added]:
+- getToolSettingSections
+- shouldShowToolSubmenu
+[Lessons Learned]:
+- 在 UI 接入前先冻结设置分区映射，可以防止组件层条件判断膨胀
+- `text` 工具和普通绘图工具的交互边界需要由纯逻辑测试先定义，避免后续子面板误弹出
+[Impact Analysis]:
+- 为 Task 3 的 `ToolbarApp` 与 `SubmenuPanel` 改造提供稳定输入
+- 降低后续接入 RGB 面板、辅助模式开关和橡皮命令按钮时的回归风险
+[Performance Metrics]:
+- `npm test -- TestFile/unit/toolbar-settings.test.ts`：4/4 通过，约 0.8s
+- `GetDiagnostics`：新增测试文件与模块无诊断错误
+
+[Date]: 2026-06-05 21:47:02
+[Type]: Fix
+[Component]: Shape Recognition
+[Changes]:
+- 新增 `TestFile/unit/shape-recognition.test.ts`，以 TDD 锁住直线、椭圆、矩形、箭头和自由笔迹的最小分类行为
+- 新增 `src/canvas/shapeRecognition.ts`，提供 `classifyShapeCandidate(points)` 纯逻辑入口
+- 采用 `arrow -> rect -> ellipse -> line -> freehand` 的最小判定顺序，并统一输出 `high/low` 置信度
+[Variables Added]:
+- 无
+[Functions Added]:
+- classifyShapeCandidate
+- isClosedPath
+- isLine
+- isRectangle
+- isEllipse
+- isArrow
+- getDistance
+- getDistanceToSegment
+- getBounds
+[Lessons Learned]:
+- 图形识别的首版实现应先锁住外部行为，而不是过早追求几何算法完备性；纯逻辑 + 单测更适合后续渐进增强
+- 对闭合图形与箭头优先分流，再让直线做兜底，可以降低简单阈值策略下的误判概率
+[Impact Analysis]:
+- 为后续 Task 7 的辅助模式抬笔识别提供稳定入口
+- 当前实现只依赖点集输入，便于在 Canvas 集成前独立测试与演进
+[Performance Metrics]:
+- `npm test -- TestFile/unit/shape-recognition.test.ts`：5/5 通过，约 0.8s
+- `npm test`：31/31 通过，约 1.0s
+- `npm run build`：通过
+- `GetDiagnostics`：新增文件无诊断错误
+
+[Date]: 2026-06-05 21:58:30
+[Type]: Fix
+[Component]: Canvas Integration / Assist Mode / Text Tool
+[Changes]:
+- 将 `CanvasApp` 改为由统一对象栈驱动渲染和撤回：普通笔迹追加 `stroke` 对象，高置信度辅助图形追加 `shape` 对象，文本工具停笔后追加基础 `text` 对象
+- 新增对象栈与 `canvasState` 的同步桥接：撤回和清空统一先改对象栈，再同步收口已提交笔迹和手写分组元数据
+- 接入 `assistMode` 与 `text` 工具基础流程，文本工具停笔 3 秒后展示基础识别条并渲染文字占位结果
+[Variables Added]:
+- objectStateRef
+- assistModeRef
+- textRecognitionModeRef
+- handwritingStrokeMetaRef
+- recognitionTimerRef
+- objectSequenceRef
+- recognitionBar
+[Functions Added]:
+- syncCommittedStrokesWithObjectIds
+- getCanvasObjectStrokeIds
+- getStrokeBounds
+- mergeBounds
+- isSameTargetIds
+- createObjectId
+- drawShape
+- drawTextObject
+- clearRecognitionTimer
+- syncStrokesWithObjectStack
+- scheduleTextRecognition
+[Lessons Learned]:
+- 统一对象栈的价值在于让渲染、撤回、清空都共享同一来源，否则 shape/text 只会停留在“已创建但不会影响画布”的半集成状态
+- 对文本识别先落地基础条和对象占位，有助于先验证状态时序与撤回语义，再迭代接入真实识别服务
+[Impact Analysis]:
+- 画布层现在具备多对象统一历史语义，为后续 OCR 结果确认、图形预览和更细粒度对象编辑提供稳定基座
+- 当前基础文字对象仍使用占位文案，真实识别结果替换时需要继续补确认交互和替换策略
+[Performance Metrics]:
+- `npm test`：38/38 通过
+- `npm run build`：通过
+- `npm run lint`：失败，环境缺少 `eslint`
+- `npm run dev`：进程持续运行，最近输出仅见 HMR 更新与页面 reload，无新增启动失败
+
+[Date]: 2026-06-05 22:05:08
+[Type]: Fix
+[Component]: Enhancements Plan / Task 8 Closeout
+[Changes]:
+- 补齐 `ProjectBasics/Function.txt` 与 `ProjectBasics/Variable.txt` 中遗漏的函数、常量和运行时引用登记
+- 修复 `src/toolbar/SubmenuPanel.tsx` 中颜色按钮与范围输入缺少可访问性文本的问题
+- 为 `src/toolbar/ToolbarApp.tsx` 中主工具按钮补充 `type="button"`，消除按钮类型提示
+- 将最终 `npm test`、`npm run build`、`GetDiagnostics` 与 `npm run dev` 运行态写入测试日志和上下文
+[Variables Added]:
+- 无
+[Functions Added]:
+- 无
+[Lessons Learned]:
+- 最后一轮收口不仅要看测试是否通过，也要核对登记文件是否完整，否则维护时会反复补历史台账
+- 诊断收口优先修掉 Error 级可访问性问题，样式类 Warning 可以保留为下一轮工程化治理项
+[Impact Analysis]:
+- 增强计划现已完成文档、日志、测试与运行态的闭环，便于后续继续迭代真实 OCR 或更细粒度对象编辑
+- 剩余 Warning 不影响构建和开发运行，但说明 UI 内联样式与 TypeScript 配置基线仍可继续收敛
+[Performance Metrics]:
+- `npm test`：9 files passed, 38 tests passed，约 1.90s
+- `npm run build`：通过；Vite 构建约 409ms，Electron 主进程编译通过
+- `npm run lint`：失败；当前环境未安装 `eslint` 可执行文件
+- `GetDiagnostics`：`SubmenuPanel.tsx` 与 `ToolbarApp.tsx` 无 Error；仍有内联样式 Warning 和 `forceConsistentCasingInFileNames` 提示
+- `npm run dev`：进程持续运行，最新输出仅见 HMR 更新与页面 reload

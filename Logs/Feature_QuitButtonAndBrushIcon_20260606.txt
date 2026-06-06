@@ -1,0 +1,29 @@
+[Date]: 2026-06-06 11:18:00
+[Type]: Feature
+[Component]: Settings / Main Process / App Icon
+[Changes]:
+- 在系统设置面板底部新增 `退出程序` 按钮
+- 在工具栏渲染层接入 `app:quit` IPC 发送逻辑
+- 在主进程新增 `ipcMain.on('app:quit', () => app.quit())`
+- 生成 `brush-app-icon.svg`、`brush-app-icon.png`、`brush-app-icon.ico` 三份画笔图标资源
+- 将画笔图标接入开发态窗口图标和 `electron-builder` / NSIS 图标配置
+- 新增并更新对应单元测试，覆盖退出按钮文案、退出 IPC 和图标路径配置
+[Variables Added]:
+- APP_ICON_RELATIVE_PATH
+- SHORTCUT_FIELDS
+[Functions Added]:
+- getAppIconPath()
+- handleQuitApp()
+[Lessons Learned]:
+- 把“退出程序”放在系统设置面板而不是主工具栏，可以显著降低误触风险。
+- 应用图标最好同时保留 SVG 源图和 PNG/ICO 产物，便于后续继续迭代或更换安装器配置。
+[Impact Analysis]:
+- 用户可以直接从设置面板关闭整个应用。
+- 应用与安装器不再使用默认 Electron 图标，视觉识别度更高。
+- 旧的默认 `release/` 打包目录存在外部占用问题，因此本轮安装器验证改在 `release-quit-icon/` 完成。
+[Performance Metrics]:
+- focused tests: 3 files passed, 6 tests passed
+- npm test: 18 files passed, 81 tests passed
+- npm run lint: passed
+- npm run build: passed
+- npx electron-builder --win nsis --config.directories.output=release-quit-icon: passed

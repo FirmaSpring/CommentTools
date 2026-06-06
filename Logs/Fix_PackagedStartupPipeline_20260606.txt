@@ -1,0 +1,27 @@
+[Date]: 2026-06-06 13:17:00
+[Type]: Fix
+[Component]: Electron Packaging / Startup Pipeline
+[Changes]:
+- 修复 `dist-electron/package.json` 因 UTF-8 BOM 导致的 JSON 解析错误
+- 修复安装版窗口仍尝试加载 `http://localhost:5173` 的问题
+- 新增 `rendererPaths` 纯逻辑模块统一开发态与安装态入口选择
+- 重新构建并验证 Windows 安装包与 `win-unpacked` 可执行文件
+[Variables Added]:
+- None
+[Functions Added]:
+- getRendererTarget(appPath, view, devServerUrl)
+- getDevServerUrl()
+- loadRenderer(window, view)
+[Lessons Learned]:
+- 打包链路中生成的 JSON 配置文件必须避免 BOM，尤其在 Windows PowerShell 5 下。
+- Electron 安装版验证必须覆盖“主进程可启动”和“渲染入口可加载”两层，否则容易漏掉只在打包态暴露的问题。
+[Impact Analysis]:
+- 安装后启动时不再弹出主进程 JSON 解析错误。
+- 安装版界面不再依赖本地开发服务器。
+- 当前新安装器已具备真实可启动性。
+[Performance Metrics]:
+- npm test: 19 files passed, 84 tests passed
+- npm run lint: passed
+- npm run build: passed
+- npm run dist:win: passed
+- win-unpacked startup: verified

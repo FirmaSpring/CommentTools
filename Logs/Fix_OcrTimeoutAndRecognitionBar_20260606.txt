@@ -1,0 +1,27 @@
+[Date]: 2026-06-06 10:06:30
+[Type]: Fix
+[Component]: src/canvas/ocrEngine.ts, src/canvas/recognitionBarModel.ts, src/canvas/CanvasApp.tsx, src/canvas/Canvas.css
+[Changes]:
+- 为 OCR 增加 `withOcrTimeout()` 超时保护，默认 8 秒未返回就中止等待并回退界面状态。
+- OCR 失败时改为异步重置 worker，不阻塞界面把识别框从“识别中”切回可编辑状态。
+- 新增 `recognitionBarModel.ts`，统一 OCR 识别框的尺寸钳制和主题配置。
+- 将 OCR 识别框样式改为 20,19,20 黑底和白色呼吸边，并限制最大宽度，避免文本框超出屏幕。
+- 为识别框按钮区域增加换行能力，窄屏时不再把整块内容撑出边界。
+[Variables Added]:
+- OCR_TIMEOUT_MS
+[Functions Added]:
+- getOcrTimeoutMs()
+- withOcrTimeout(task, timeoutMs)
+- getRecognitionBarBounds(viewport)
+- getRecognitionBarTheme()
+[Lessons Learned]:
+- OCR 运行时最怕的是 worker 卡死而不是识别失败，因此界面必须先有确定性的超时出口。
+- 识别框尺寸不能只靠 CSS 的最小宽度，必须结合视口尺寸做模型化钳制。
+[Impact Analysis]:
+- OCR 不再长时间卡在“正在识别”，失败时会回退到可手动输入状态。
+- OCR 识别框视觉风格已统一为用户要求的深色底和白色呼吸边，且在窄屏下不会超出可视区域。
+[Performance Metrics]:
+- focused tests: 2 files passed, 7 tests passed, Duration 0.61s
+- npm test: 15 files passed, 61 tests passed, Duration 0.98s
+- npm run lint: passed
+- npm run build: passed / Vite build 521ms

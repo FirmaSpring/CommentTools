@@ -1,0 +1,28 @@
+[Date]: 2026-06-06 00:31:24
+[Type]: Fix
+[Component]: Toolbar / Settings Window / Cursor
+[Changes]:
+- 将工具栏改为紧凑独立窗口，新增独立设置窗口显示 pen/eraser 二级设置
+- 通过 `toolbar-state-sync` 在工具栏窗口与设置窗口之间同步主题、工具、颜色、大小和辅助模式
+- 修复画笔光标热点，让绘制轨迹从笔尖起笔而不是从图标中心发出
+- 重启开发态 Electron 主进程，使新的多窗口结构生效
+[Variables Added]:
+- settingsWindow
+- ToolbarApp.stateRef
+[Functions Added]:
+- shouldShowSettingsWindow
+- emitToolbarState
+- getSettingsBounds
+- createSettingsWindowOptions
+- getCursorHotspot
+[Lessons Learned]:
+- 透明区域太大的单窗口方案会把“显示不全”和“光标切换抖动”叠在一起，拆窗后更容易稳定命中区
+- 自定义 SVG 光标的热点必须单独建模，否则视觉正确但交互仍然会错位
+[Impact Analysis]:
+- 设置窗口内容完整显示，不再被工具栏窗口边界裁切
+- 工具栏与设置区域不再依赖大面积透明蒙版，降低笔光标在该区域的切换干扰
+- 现有画布、OCR、辅助模式和主题切换链路保持不变
+[Performance Metrics]:
+- `npm test`: 9 files passed, 44 tests passed
+- `npm run lint`: passed
+- `npm run build`: passed

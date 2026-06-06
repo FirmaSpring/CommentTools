@@ -1,0 +1,31 @@
+[Date]: 2026-06-05 21:50:06
+[Type]: Feature
+[Component]: Canvas Text Recognition
+[Changes]:
+- 新增 `src/canvas/textRecognition.ts`，实现停笔 3 秒触发判断
+- 新增 `groupHandwritingBatch(strokes)`，按时间与空间邻近关系进行连续手写分组
+- 新增 `estimateTextFontSize(bounds)`，基于包围盒高度估算文字字号并做最小值钳制
+- 新增 `TestFile/unit/text-recognition.test.ts`，按 TDD 覆盖红灯到绿灯流程
+[Variables Added]:
+- TEXT_RECOGNITION_DELAY_MS
+- HANDWRITING_LINE_GAP_PX
+- HANDWRITING_STROKE_GAP_PX
+- HANDWRITING_STROKE_GAP_MS
+- MINIMUM_TEXT_FONT_SIZE
+[Functions Added]:
+- shouldTriggerTextRecognition
+- groupHandwritingBatch
+- estimateTextFontSize
+[Lessons Learned]:
+- 先把识别触发时机和分组边界抽为纯逻辑，可以让后续 OCR 与 Canvas 集成保持低耦合
+- 对字号估算先提供稳定下限，比过早设计复杂排版策略更适合当前阶段
+[Impact Analysis]:
+- 为 Task 7 的识别结果条与对象化文本接入提供稳定基础
+- 当前改动仅新增纯逻辑模块与单测，不改变现有 Toolbar/Canvas 运行路径
+[Performance Metrics]:
+- `npm test -- TestFile/unit/text-recognition.test.ts`: 5/5 通过，约 0.8s
+- `npm test -- TestFile/unit/text-recognition.test.ts TestFile/unit/shape-recognition.test.ts TestFile/unit/canvas-objects.test.ts`: 13/13 通过，约 0.9s
+- `npm test`: 36/36 通过，约 1.8s
+- `npm run build`: 通过
+- `npm run lint`: 未通过，原因是当前环境缺少 `eslint` 可执行依赖
+- `GetDiagnostics`: 新增模块与测试文件均无诊断错误

@@ -1,0 +1,23 @@
+[Date]: 2026-06-05 21:30:08
+[Type]: Fix
+[Component]: Toolbar Model / Task 1
+[Changes]:
+- 按增强计划 Task 1 先补 `toolbar-model.test.ts` 失败断言，要求工具顺序包含 `text`
+- 运行聚焦测试，确认失败点是 `src/toolbar/toolbarModel.ts` 缺少 `text` 工具
+- 对工具栏模型做最小实现，补齐 `ToolbarAction` 的 `text` 联合类型和 `字体自识别` 工具定义
+- 保持 `src/electron/windowConfig.ts` 与 `electron/main.ts` 不变，因为它们已满足增强版窗口高度要求
+[Variables Added]:
+- 无
+[Functions Added]:
+- 无
+[Lessons Learned]:
+- 在已有部分实现先行落地的情况下，TDD 仍可通过先改断言来准确识别真实缺口
+- 对已满足计划的窗口配置保持不动，可以降低回归风险并减少无效修改
+[Impact Analysis]:
+- 工具栏模型已支持后续 UI 接入 `text` 工具按钮
+- 增强版窗口尺寸的测试覆盖继续有效
+[Performance Metrics]:
+- 首次聚焦测试：1 failed, 8 passed，约 0.9s
+- 修复后聚焦测试：2 files passed, 9 tests passed，约 0.8s
+- `npm run build`: 通过
+- `npm run lint`: 未通过，环境缺少 `eslint` 可执行依赖

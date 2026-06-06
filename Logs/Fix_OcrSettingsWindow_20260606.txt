@@ -1,0 +1,30 @@
+[Date]: 2026-06-06 00:55:00
+[Type]: Fix
+[Component]: src/toolbar/SubmenuPanel.tsx, src/toolbar/Toolbar.css, src/canvas/ocrEngine.ts, src/canvas/CanvasApp.tsx
+[Changes]:
+- 为独立设置窗口补充内部滚动容器 `.submenu-panel__content`，解决底部功能显示不全。
+- 恢复独立设置面板实体背景 `background: var(--panel-bg)`，避免设置窗口看起来“没有背景”。
+- 新增真实 OCR 模块 `ocrEngine.ts`，通过 `tesseract.js` 对离屏 canvas 导出的手写图片执行识别。
+- 在 `CanvasApp` 中新增 OCR 请求序号控制、识别中状态和回填逻辑，防止过期结果覆盖新识别。
+- 识别确认条继续使用完整 `targetIds`，确认时统一替换整组笔画而不是局部笔画。
+[Variables Added]:
+- workerPromise
+- recognitionRequestRef
+[Functions Added]:
+- normalizeOcrText(text)
+- getWorker()
+- recognizeTextFromDataUrl(dataUrl)
+- getRecognitionStrokeImageDataUrl(strokes, bounds)
+- runOcrForDraft(draft)
+[Lessons Learned]:
+- 设置窗口拆成独立窗口后，内容高度问题应该通过面板内部滚动解决，而不是继续放大窗口外壳。
+- OCR 不能只做占位确认条，必须把笔迹真正转成图像后再识别，否则用户会直接感知为“没装 OCR”。
+- 为异步 OCR 增加请求序号是必要的，否则连续书写时旧识别结果容易回写到新草稿。
+[Impact Analysis]:
+- 设置窗口交互更稳定，颜色、RGB、大小、拖尾、辅助模式和清除所有都可以滚动访问。
+- 文本工具从“伪识别”升级为真实 OCR 流程，识别失败时仍保留手动编辑兜底。
+- 统一对象栈与 `targetIds` 替换链路保持兼容，不影响撤回、清空和辅助图形功能。
+[Performance Metrics]:
+- npm test: 10 files passed, 47 tests passed, 约 1.23s
+- npm run lint: passed
+- npm run build: passed，Vite build 约 595ms

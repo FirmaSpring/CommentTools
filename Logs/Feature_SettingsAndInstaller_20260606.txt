@@ -1,0 +1,47 @@
+[Date]: 2026-06-06 11:06:52
+[Type]: Feature
+[Component]: Toolbar / Main Process / Packaging
+[Changes]:
+- 在工具栏中新增 `settings` 按钮，并让独立 `settingsWindow` 可显示系统设置面板
+- 新增 `src/toolbar/SystemSettingsPanel.tsx`，提供开机自动启动开关和快捷键配置输入
+- 新增 `src/electron/appSettings.ts`，统一默认快捷键、输入规范化、冲突校验和设置合并逻辑
+- 新增 `src/electron/autoLaunch.ts`，生成 Windows Run 注册表启用/关闭开机自启动参数
+- 在 `electron/main.ts` 中接入设置持久化、全局快捷键动态注册、注册表自启动与系统设置 IPC
+- 在 `package.json` 中接入 `electron-builder + NSIS` 打包配置，并生成 Windows 安装器
+- 修正 Electron 生产入口到 `dist-electron/electron/main.cjs`，保证 builder 能找到主进程入口
+- 补齐 `tesseract.js` 与 `electron-builder` 依赖，确保生产构建和安装器构建通过
+[Variables Added]:
+- DEFAULT_SHORTCUT_SETTINGS
+- DEFAULT_APP_SETTINGS
+- RUN_REGISTRY_PATH
+- AUTO_LAUNCH_VALUE_NAME
+- appSettings
+- registeredUserShortcuts
+- openPanel
+- shortcutDrafts
+- settingsError
+[Functions Added]:
+- normalizeShortcutInput(value)
+- validateShortcutSettings(shortcuts)
+- mergeAppSettings(settings)
+- getShortcutEntries(shortcuts)
+- getAutoLaunchCommandValue(executablePath)
+- getEnableAutoLaunchArgs(executablePath)
+- getDisableAutoLaunchArgs()
+- syncShortcutSettings(shortcuts)
+- syncLaunchOnStartup(enabled)
+- registerUserShortcuts()
+- handleShortcutAction(action)
+[Lessons Learned]:
+- 用户级全局快捷键更适合在主进程统一收口，渲染层只维护输入和错误提示，避免窗口状态不同步。
+- 自启动路径必须绑定运行时 `process.execPath`，这样开发态和安装态都不会写死路径。
+- 安装器成功生成之前，最好先用纯逻辑单测锁住入口路径和 NSIS 配置，否则 builder 失败时定位成本更高。
+[Impact Analysis]:
+- 用户可以直接从工具栏配置鼠标、手写、橡皮、撤回和清空快捷键。
+- 勾选开机自动启动后，程序会按实际安装位置写入注册表启动项。
+- 安装包现在支持图形化安装并允许选择安装目录，满足分盘安装要求。
+[Performance Metrics]:
+- npm test: 17 files passed, 78 tests passed
+- npm run lint: passed
+- npm run build: passed
+- npm run dist:win: passed

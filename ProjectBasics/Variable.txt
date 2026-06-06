@@ -1,0 +1,61 @@
+canvasWindow | BrowserWindow | electron/main.ts | 全屏透明画布窗口实例，用于桌面绘制与鼠标穿透切换 | canvasWindow?.setIgnoreMouseEvents(true, { forward: true })
+toolbarWindow | BrowserWindow | electron/main.ts | 右侧悬浮工具栏窗口实例，承载黑球与垂直工具栏 | toolbarWindow?.loadURL('http://localhost:5173/src/toolbar/index.html')
+settingsWindow | BrowserWindow | electron/main.ts | 独立设置窗口实例，承载 pen/eraser 的二级设置面板并避免同窗裁切 | settingsWindow?.loadURL('http://localhost:5173/src/toolbar/index.html?view=settings')
+stateRef | React.MutableRefObject<CanvasState> | src/canvas/CanvasApp.tsx | 保存当前画布所有已提交与正在绘制的笔画状态 | stateRef.current = commitStroke(finishStroke(stateRef.current))
+stateRef | React.MutableRefObject<ToolbarStateSyncPayload> | src/toolbar/ToolbarApp.tsx | 保存工具栏与设置窗口最近一次同步的状态快照，供跨窗口状态广播使用 | stateRef.current = { ...stateRef.current, showSubmenu: true }
+activeToolRef | React.MutableRefObject<DrawingTool> | src/canvas/CanvasApp.tsx | 保存当前选中的绘制工具，避免频繁渲染时丢失工具状态 | activeToolRef.current = tool
+colorRef | React.MutableRefObject<string> | src/canvas/CanvasApp.tsx | 保存当前画笔颜色设置 | colorRef.current = '#ff0000'
+sizeRef | React.MutableRefObject<number> | src/canvas/CanvasApp.tsx | 保存当前笔触或橡皮大小 | sizeRef.current = 5
+trailRef | React.MutableRefObject<number> | src/canvas/CanvasApp.tsx | 保存当前拖尾长度配置 | trailRef.current = 50
+isDrawingRef | React.MutableRefObject<boolean> | src/canvas/CanvasApp.tsx | 标记当前是否处于按下绘制状态 | isDrawingRef.current = true
+frameRef | React.MutableRefObject<number | null> | src/canvas/CanvasApp.tsx | 保存 requestAnimationFrame 句柄，避免重复调度 | frameRef.current = window.requestAnimationFrame(...)
+themeMode | ToolbarThemeMode | src/toolbar/ToolbarApp.tsx | 保存当前工具栏深浅色主题模式，用于按钮和面板样式切换 | const [themeMode, setThemeMode] = useState('dark')
+leaveTimerRef | React.MutableRefObject<number | null> | src/toolbar/ToolbarApp.tsx | 保存工具栏边缘鼠标离开缓冲定时器，减少鼠标样式抖动 | leaveTimerRef.current = window.setTimeout(...)
+ignoreMouseRef | React.MutableRefObject<boolean | null> | src/toolbar/ToolbarApp.tsx | 记录上一次工具栏穿透状态，避免重复向主进程发送相同 IPC | ignoreMouseRef.current = shouldIgnore
+keepWindowInteractive | boolean | src/toolbar/ToolbarApp.tsx | 锁定紧凑工具栏窗口始终接管鼠标事件，避免按钮和图标边缘因穿透切换导致鼠标样式抽搐 | const keepWindowInteractive = true
+rgbColor | RgbColor | src/toolbar/ToolbarApp.tsx | 保存 RGB 取色板当前三个通道值，确保预设色与手动输入保持同步 | const [rgbColor, setRgbColor] = useState(hexToRgbColor('#ff4d6d'))
+assistMode | boolean | src/toolbar/ToolbarApp.tsx | 控制画笔辅助模式开关的当前状态，并透传到画布窗口 | const [assistMode, setAssistMode] = useState(false)
+RGB_CHANNELS | Array<{ key: keyof RgbColor; label: string }> | src/toolbar/SubmenuPanel.tsx | 定义 RGB 取色板各通道的展示顺序与标签 | const RGB_CHANNELS = [{ key: 'r', label: 'R' }, ...]
+TEXT_RECOGNITION_DELAY_MS | number | src/canvas/textRecognition.ts | 停笔多久后触发一次文字识别分组判断 | const TEXT_RECOGNITION_DELAY_MS = 3000
+HANDWRITING_LINE_GAP_PX | number | src/canvas/textRecognition.ts | 判断两笔是否仍处于同一手写行的最大纵向偏移 | const HANDWRITING_LINE_GAP_PX = 30
+HANDWRITING_STROKE_GAP_PX | number | src/canvas/textRecognition.ts | 判断相邻两笔是否足够接近以归入同一组的最大横向间距 | const HANDWRITING_STROKE_GAP_PX = 40
+HANDWRITING_STROKE_GAP_MS | number | src/canvas/textRecognition.ts | 判断相邻两笔是否连续书写的最大时间间隔 | const HANDWRITING_STROKE_GAP_MS = 800
+MINIMUM_TEXT_FONT_SIZE | number | src/canvas/textRecognition.ts | 估算文字字号时的最小可读下限 | const MINIMUM_TEXT_FONT_SIZE = 16
+objectStateRef | React.MutableRefObject<CanvasObjectsState> | src/canvas/CanvasApp.tsx | 保存统一对象栈，驱动画布中笔迹、图形和文字对象的统一渲染与撤回 | objectStateRef.current = appendShapeObject(objectStateRef.current, shapeObject)
+assistModeRef | React.MutableRefObject<boolean> | src/canvas/CanvasApp.tsx | 保存当前辅助模式开关，供抬笔时决定是否走图形识别流程 | assistModeRef.current = true
+textRecognitionModeRef | React.MutableRefObject<boolean> | src/canvas/CanvasApp.tsx | 保存当前是否处于文本工具模式，供停笔识别定时器和抬笔流程读取 | textRecognitionModeRef.current = true
+handwritingStrokeMetaRef | React.MutableRefObject<HandwritingStrokeMeta[]> | src/canvas/CanvasApp.tsx | 保存文本工具下每笔手写的结束时间和包围盒，用于 3 秒停笔分组识别 | handwritingStrokeMetaRef.current = [...handwritingStrokeMetaRef.current, strokeMeta]
+recognitionTimerRef | React.MutableRefObject<number \| null> | src/canvas/CanvasApp.tsx | 保存停笔文字识别定时器句柄，避免重复触发过期识别结果 | recognitionTimerRef.current = window.setTimeout(...)
+objectSequenceRef | React.MutableRefObject<number> | src/canvas/CanvasApp.tsx | 维护统一对象 id 的递增序号，确保 stroke/shape/text 对象 id 唯一 | objectSequenceRef.current += 1
+assistMode | boolean | src/canvas/CanvasApp.tsx | 映射到画布节点数据属性的辅助模式状态，便于运行态观察与后续 UI 扩展 | const [assistMode, setAssistMode] = useState(false)
+textRecognitionMode | boolean | src/canvas/CanvasApp.tsx | 标记当前是否进入文本工具的基础识别流程，并控制识别条显隐 | const [textRecognitionMode, setTextRecognitionMode] = useState(false)
+TEXT_RECOGNITION_IDLE_MS | number | src/canvas/CanvasApp.tsx | Canvas 集成层使用的停笔识别调度时长，和文字识别阈值保持 3 秒一致 | const TEXT_RECOGNITION_IDLE_MS = 3000
+trailColorRef | React.MutableRefObject<string> | src/canvas/CanvasApp.tsx | 保存当前拖尾颜色设置，确保画布渲染与工具栏面板保持同步 | trailColorRef.current = '#7dd3fc'
+previewShapeTypeRef | React.MutableRefObject<CanvasShapeType \| null> | src/canvas/CanvasApp.tsx | 保存辅助模式实时预览的高置信度图形类型，供绘制中吸附显示 | previewShapeTypeRef.current = 'line'
+TOOLBAR_TOOLS | ToolbarToolDefinition[] | src/toolbar/toolbarModel.ts | 定义主工具栏按钮顺序、动作 id 与标签文案 | const tools = getToolbarTools()
+PEN_SETTING_KEYS | readonly string[] | src/toolbar/toolbarModel.ts | 定义画笔基础设置键集合，供工具模型保留固定配置顺序 | const keys = getPenSettingKeys()
+FLOATING_BALL_SIZE | number | src/toolbar/toolbarModel.ts | 定义悬浮黑球入口尺寸 | const size = getFloatingBallSize()
+TOOLBAR_PANEL_WIDTH | number | src/toolbar/toolbarModel.ts | 定义主工具栏面板宽度 | const width = getToolbarPanelWidth()
+DEFAULT_THEME_MODE | ToolbarThemeMode | src/toolbar/toolbarModel.ts | 定义工具栏默认主题模式 | const mode = getDefaultThemeMode()
+TOOL_SETTING_SECTIONS | Record<ToolbarSettingsTool, ToolbarSettingSection[]> | src/toolbar/toolbarSettings.ts | 定义不同工具应显示的设置分区映射 | const sections = getToolSettingSections('pen')
+TOOLBAR_MOUSE_LEAVE_DELAY_MS | number | src/toolbar/toolbarHitTest.ts | 定义工具栏边缘离开后的鼠标穿透缓冲时长 | const delay = getToolbarMouseLeaveDelay()
+recognitionRequestRef | React.MutableRefObject<number> | src/canvas/CanvasApp.tsx | 保存当前 OCR 请求序号，用于丢弃过期识别结果并避免旧结果覆盖新输入 | recognitionRequestRef.current += 1
+recognitionBar | { suggestionText: string; draftText: string; text: string; fontSize: number; targetIds: string[]; bounds: InkBounds; isRecognizing: boolean } \| null | src/canvas/CanvasApp.tsx | 保存 OCR 确认条的建议文本、可编辑草稿、目标笔迹、位置和当前识别中状态 | setRecognitionBar({ suggestionText: '', draftText: '', text: 'OCR 识别中', fontSize: 24, targetIds: ['stroke-1'], bounds, isRecognizing: true })
+workerPromise | Promise<{ recognize: (image: string) => Promise<{ data: { text: string } }>; terminate: () => Promise<unknown> }> \| null | src/canvas/ocrEngine.ts | 缓存 Tesseract OCR worker 的初始化 Promise，避免每次识别重复创建 worker | workerPromise = import('tesseract.js').then(...)
+ocrQueueRef | React.MutableRefObject<OcrQueueState<RecognitionDraft>> | src/canvas/CanvasApp.tsx | 保存 OCR 串行队列状态，只允许一个活动识别和一个最新待处理识别，避免任务堆积 | ocrQueueRef.current = createOcrQueueState<RecognitionDraft>()
+EMERGENCY_SHORTCUTS | readonly string[] | electron/main.ts | 定义主进程紧急解锁快捷键集合，用于强制退出全屏绘图拦截状态 | const EMERGENCY_SHORTCUTS = ['Escape', 'CommandOrControl+Shift+X'] as const
+OCR_PSM_SINGLE_LINE | number | src/canvas/ocrEngine.ts | OCR 单行分段模式编号，优先用于一行手写文字识别 | const OCR_PSM_SINGLE_LINE = 7
+OCR_PSM_SINGLE_BLOCK | number | src/canvas/ocrEngine.ts | OCR 单块分段模式编号，用作单行识别失败后的回退策略 | const OCR_PSM_SINGLE_BLOCK = 6
+OCR_TIMEOUT_MS | number | src/canvas/ocrEngine.ts | OCR 最大等待时长，防止 worker 卡住后识别框一直停在加载态 | const OCR_TIMEOUT_MS = 8000
+DEFAULT_SHORTCUT_SETTINGS | ShortcutSettings | src/electron/appSettings.ts | 定义系统设置面板和主进程共用的默认快捷键映射 | const shortcuts = DEFAULT_SHORTCUT_SETTINGS
+DEFAULT_APP_SETTINGS | AppSettings | src/electron/appSettings.ts | 定义应用默认配置，包含关闭的自启动开关和默认快捷键 | const settings = DEFAULT_APP_SETTINGS
+RUN_REGISTRY_PATH | string | src/electron/autoLaunch.ts | Windows 开机自启动注册表路径 | const path = RUN_REGISTRY_PATH
+AUTO_LAUNCH_VALUE_NAME | string | src/electron/autoLaunch.ts | Windows 开机自启动注册表值名 | const valueName = AUTO_LAUNCH_VALUE_NAME
+appSettings | AppSettings | electron/main.ts | 主进程内缓存的当前应用设置，包含自启动和快捷键配置 | appSettings.shortcuts.mouse
+registeredUserShortcuts | Set<string> | electron/main.ts | 主进程当前已注册的用户快捷键集合，便于重新注册前统一注销 | registeredUserShortcuts.add('Alt+1')
+openPanel | ToolbarPanelTool | src/toolbar/ToolbarApp.tsx | 保存当前工具栏右侧设置窗口正在显示的面板类型 | const [openPanel, setOpenPanel] = useState(null)
+appSettings | AppSettings | src/toolbar/ToolbarApp.tsx | 保存设置窗口当前展示的持久化配置状态 | const [appSettings, setAppSettings] = useState(DEFAULT_APP_SETTINGS)
+shortcutDrafts | ShortcutSettings | src/toolbar/ToolbarApp.tsx | 保存系统设置面板中用户正在编辑的快捷键输入草稿 | const [shortcutDrafts, setShortcutDrafts] = useState(DEFAULT_APP_SETTINGS.shortcuts)
+settingsError | string | src/toolbar/ToolbarApp.tsx | 保存系统设置面板当前的快捷键或自启动错误提示 | const [settingsError, setSettingsError] = useState('')
+APP_ICON_RELATIVE_PATH | string | electron/main.ts | 定义应用运行时加载的画笔图标相对路径，供各窗口统一使用 | const APP_ICON_RELATIVE_PATH = 'assets/icons/brush-app-icon.png'
+SHORTCUT_FIELDS | Array<{ action: ShortcutAction; label: string }> | src/toolbar/SystemSettingsPanel.tsx | 定义系统设置面板中快捷键编辑项的显示顺序和标签 | SHORTCUT_FIELDS.map((field) => field.label)
